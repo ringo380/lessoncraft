@@ -2862,6 +2862,41 @@ var InputHandler = (function (_super) {
     InputHandler.prototype.reset = function () {
         this._parser.reset();
         this._terminal.reset();
+        this._terminal._currentLesson = null;
+        this._terminal._currentStep = 0;
+    };
+
+    Terminal.prototype.startLesson = function(lesson) {
+        this._currentLesson = lesson;
+        this._currentStep = 0;
+        this._onLessonStart.fire(lesson);
+        this._renderCurrentStep();
+    };
+
+    Terminal.prototype._renderCurrentStep = function() {
+        if (!this._currentLesson) return;
+        var step = this._currentLesson.Steps[this._currentStep];
+        this.write('\r\n' + step.Content + '\r\n');
+        if (step.Commands && step.Commands.length > 0) {
+            this.write('> ' + step.Commands.join(' && ') + '\r\n');
+        }
+    };
+
+    Terminal.prototype.completeCurrentStep = function() {
+        if (!this._currentLesson) return;
+        this._onLessonStep.fire({
+            lessonId: this._currentLesson.ID,
+            stepIndex: this._currentStep,
+            completed: true
+        });
+        this._currentStep++;
+        if (this._currentStep >= this._currentLesson.Steps.length) {
+            this._currentLesson = null;
+            this._currentStep = 0;
+            this.write('\r\nLesson completed!\r\n');
+        } else {
+            this._renderCurrentStep();
+        }
     };
     InputHandler.prototype.setgLevel = function (level) {
         this._terminal.setgLevel(level);
