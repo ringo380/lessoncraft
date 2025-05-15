@@ -3,9 +3,9 @@ package types
 import "context"
 
 type LessonContext struct {
-	LessonID    string `json:"lesson_id" bson:"lesson_id"`
-	StepIndex   int    `json:"step_index" bson:"step_index"`
-	Completed   bool   `json:"completed" bson:"completed"`
+	LessonID  string `json:"lesson_id" bson:"lesson_id"`
+	StepIndex int    `json:"step_index" bson:"step_index"`
+	Completed bool   `json:"completed" bson:"completed"`
 }
 
 type Instance struct {

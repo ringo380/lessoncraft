@@ -72,12 +72,12 @@ func (e PlaygroundExtras) GetDuration(name string) (time.Duration, bool) {
 }
 
 type LessonStep struct {
-	ID          string `json:"id" bson:"id"`
-	Content     string `json:"content" bson:"content"`
-	Commands    []string `json:"commands" bson:"commands"`
-	Expected    string `json:"expected" bson:"expected"`
-	Image       string `json:"image" bson:"image"`
-	Timeout     time.Duration `json:"timeout" bson:"timeout"`
+	ID       string        `json:"id" bson:"id"`
+	Content  string        `json:"content" bson:"content"`
+	Commands []string      `json:"commands" bson:"commands"`
+	Expected string        `json:"expected" bson:"expected"`
+	Image    string        `json:"image" bson:"image"`
+	Timeout  time.Duration `json:"timeout" bson:"timeout"`
 }
 
 type Lesson struct {
