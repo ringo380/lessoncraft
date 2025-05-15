@@ -5,7 +5,6 @@ import (
 
 	"github.com/play-with-docker/play-with-docker/event"
 	"github.com/play-with-docker/play-with-docker/pwd/types"
-	"github.com/satori/go.uuid"
 )
 
 func (p *pwd) PlaygroundNew(playground types.Playground) (*types.Playground, error) {

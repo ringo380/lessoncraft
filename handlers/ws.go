@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/play-with-docker/play-with-docker/event"
 	"github.com/play-with-docker/play-with-docker/storage"
-	"github.com/satori/go.uuid"
 )
 
 var upgrader = websocket.Upgrader{

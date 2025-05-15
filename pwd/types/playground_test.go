@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 

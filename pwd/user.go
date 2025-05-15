@@ -7,7 +7,7 @@ import (
 	"github.com/ringo380/lessoncraft/storage"
 )
 
-var userBannedError = errors.New("User is banned")
+var userBannedError = errors.New("user is banned")
 
 func (p *pwd) UserNewLoginRequest(providerName string) (*types.LoginRequest, error) {
 	req := &types.LoginRequest{Id: p.generator.NewId(), Provider: providerName}
