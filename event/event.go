@@ -7,6 +7,10 @@ func (e EventType) String() string {
 }
 
 var (
+	LESSON_START            = EventType("lesson start")
+	LESSON_STEP_COMPLETE    = EventType("lesson step complete")
+	LESSON_COMMAND_EXECUTE  = EventType("lesson command execute")
+	LESSON_VALIDATE         = EventType("lesson validate")
 	INSTANCE_VIEWPORT_RESIZE = EventType("instance viewport resize")
 	INSTANCE_DELETE          = EventType("instance delete")
 	INSTANCE_NEW             = EventType("instance new")

@@ -2,8 +2,15 @@ package types
 
 import "context"
 
+type LessonContext struct {
+	LessonID    string `json:"lesson_id" bson:"lesson_id"`
+	StepIndex   int    `json:"step_index" bson:"step_index"`
+	Completed   bool   `json:"completed" bson:"completed"`
+}
+
 type Instance struct {
 	Name        string          `json:"name" bson:"name"`
+	LessonCtx   *LessonContext  `json:"lesson_ctx,omitempty" bson:"lesson_ctx,omitempty"`
 	Image       string          `json:"image" bson:"image"`
 	Hostname    string          `json:"hostname" bson:"hostname"`
 	IP          string          `json:"ip" bson:"ip"`

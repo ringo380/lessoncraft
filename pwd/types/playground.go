@@ -71,9 +71,27 @@ func (e PlaygroundExtras) GetDuration(name string) (time.Duration, bool) {
 	}
 }
 
+type LessonStep struct {
+	ID          string `json:"id" bson:"id"`
+	Content     string `json:"content" bson:"content"`
+	Commands    []string `json:"commands" bson:"commands"`
+	Expected    string `json:"expected" bson:"expected"`
+	Image       string `json:"image" bson:"image"`
+	Timeout     time.Duration `json:"timeout" bson:"timeout"`
+}
+
+type Lesson struct {
+	ID          string       `json:"id" bson:"id"`
+	Title       string       `json:"title" bson:"title"`
+	Description string       `json:"description" bson:"description"`
+	Steps       []LessonStep `json:"steps" bson:"steps"`
+	CreatedAt   time.Time    `json:"created_at" bson:"created_at"`
+}
+
 type Playground struct {
 	Id                          string           `json:"id" bson:"id"`
 	Domain                      string           `json:"domain" bson:"domain"`
+	Lessons                     []string         `json:"lessons" bson:"lessons"`
 	DefaultDinDInstanceImage    string           `json:"default_dind_instance_image" bson:"default_dind_instance_image"`
 	AvailableDinDInstanceImages []string         `json:"available_dind_instance_images" bson:"available_dind_instance_images"`
 	AllowWindowsInstances       bool             `json:"allow_windows_instances" bson:"allow_windows_instances"`
