@@ -12,6 +12,7 @@
     --success-color: #4CAF50;
     --warning-color: #FFC107;
     --error-color: #F44336;
+    --focus-ring: 0 0 0 3px rgba(33, 150, 243, 0.4);
     
     /* Animation durations */
     --transition-quick: 150ms;
@@ -27,6 +28,16 @@
     --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Touch targets */
+    --touch-target-size: 44px;
+}
+
+/* Focus visible styles */
+*:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 4px;
 }
 
 /* Define keyframes */
@@ -186,8 +197,8 @@ md-card:hover {
 
 .lesson-commands code {
     display: block;
-    padding: 8px;
-    margin: 4px 0;
+    padding: 12px;
+    margin: 8px 0;
     background-color: var(--bg-primary);
     border-radius: 4px;
     color: var(--accent-primary);
@@ -195,6 +206,25 @@ md-card:hover {
     transition: all var(--transition-quick) ease-in-out;
     cursor: pointer;
     position: relative;
+    min-height: var(--touch-target-size);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lesson-commands code:focus-visible {
+    box-shadow: var(--focus-ring);
+    transform: scale(1.01);
+}
+
+@media (max-width: 768px) {
+    .lesson-commands code {
+        padding: 16px 12px;
+        margin: 12px 0;
+        font-size: 14px;
+    }
+    
+    .lesson-commands code::after {
+        opacity: 0.5;
+    }
 }
 
 .lesson-commands code:hover {
@@ -251,11 +281,29 @@ md-dialog.ng-leave {
 md-list-item {
     color: var(--text-primary) !important;
     transition: all var(--transition-quick) var(--ease-out-expo);
+    min-height: var(--touch-target-size);
+    position: relative;
 }
 
 md-list-item:hover {
     background-color: var(--bg-tertiary);
     transform: translateX(4px);
+}
+
+md-list-item:active,
+md-list-item.touch-active {
+    background-color: var(--accent-primary);
+    transform: translateX(2px);
+}
+
+md-list-item:focus-visible {
+    background-color: var(--bg-tertiary);
+}
+
+@media (hover: none) {
+    md-list-item:hover {
+        transform: none;
+    }
 }
 
 md-list-item.selected {
@@ -300,9 +348,22 @@ md-button.md-primary.md-raised:hover {
     background-color: var(--accent-secondary) !important;
 }
 
-md-button.md-primary.md-raised:active {
+md-button.md-primary.md-raised:active,
+md-button.md-primary.md-raised.touch-active {
     transform: translateY(0);
     box-shadow: var(--shadow-1);
+}
+
+/* Ensure touch targets are large enough */
+md-button {
+    min-height: var(--touch-target-size);
+    min-width: var(--touch-target-size);
+}
+
+@media (hover: none) {
+    md-button.md-primary.md-raised:hover {
+        transform: none;
+    }
 }
 
 .md-subhead {
