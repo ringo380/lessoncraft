@@ -28,9 +28,19 @@
     --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-spring: cubic-bezier(0.68, -0.6, 0.32, 1.6);
     
     /* Touch targets */
     --touch-target-size: 44px;
+
+    /* Terminal specific */
+    --terminal-font-size: 14px;
+    --terminal-line-height: 1.2;
+    --terminal-padding: var(--spacing-md);
+    
+    /* Additional breakpoints */
+    --breakpoint-xs: 320px;
+    --breakpoint-xxl: 1400px;
     
     /* Spacing */
     --spacing-xs: 4px;
