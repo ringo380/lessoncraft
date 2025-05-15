@@ -31,6 +31,54 @@
     
     /* Touch targets */
     --touch-target-size: 44px;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Font sizes */
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-md: 16px;
+    --text-lg: 18px;
+    --text-xl: 24px;
+
+    /* Breakpoints */
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+[role="button"],
+[role="tab"],
+[role="link"] {
+    cursor: pointer;
 }
 
 /* Focus visible styles */
@@ -38,6 +86,75 @@
     outline: none;
     box-shadow: var(--focus-ring);
     border-radius: 4px;
+    position: relative;
+    z-index: 1;
+}
+
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="link"]:focus-visible,
+.md-button:focus-visible {
+    box-shadow: var(--focus-ring), var(--shadow-2);
+    transform: translateY(-1px);
+}
+
+.skip-link {
+    background: var(--accent-primary);
+    color: white;
+    padding: var(--spacing-md);
+    position: fixed;
+    top: -100%;
+    left: 0;
+    z-index: 100;
+    transition: top var(--transition-medium) var(--ease-out-expo);
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Interactive feedback states */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px;
+    border: 2px solid var(--accent-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.success-feedback {
+    animation: successPulse 0.6s var(--ease-bounce);
+}
+
+@keyframes successPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: var(--success-color); }
+}
+
+.error-feedback {
+    animation: errorShake 0.4s var(--ease-in-out);
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 /* Define keyframes */
@@ -217,13 +334,67 @@ md-card:hover {
 
 @media (max-width: 768px) {
     .lesson-commands code {
-        padding: 16px 12px;
-        margin: 12px 0;
-        font-size: 14px;
+        padding: var(--spacing-lg) var(--spacing-md);
+        margin: var(--spacing-md) 0;
+        font-size: var(--text-sm);
     }
     
     .lesson-commands code::after {
         opacity: 0.5;
+    }
+
+    .lesson-card {
+        margin: var(--spacing-xs);
+    }
+
+    .lesson-content {
+        font-size: var(--text-sm);
+    }
+
+    md-card-actions {
+        flex-direction: column;
+    }
+
+    md-button {
+        width: 100%;
+        margin: var(--spacing-xs) 0 !important;
+    }
+
+    .terminal-container {
+        height: 60vh;
+    }
+
+    md-dialog {
+        width: 90vw;
+        max-width: none !important;
+    }
+
+    .md-dialog-content {
+        padding: var(--spacing-sm) !important;
+    }
+}
+
+/* Tablet improvements */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .lesson-card {
+        margin: var(--spacing-sm);
+    }
+
+    md-dialog {
+        width: 80vw;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+    .lesson-commands code::after {
+        opacity: 0.5;
+        position: static;
+        margin-left: var(--spacing-sm);
+    }
+
+    .md-button:active {
+        background-color: var(--bg-tertiary);
     }
 }
 
