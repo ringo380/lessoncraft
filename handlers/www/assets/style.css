@@ -153,6 +153,24 @@ md-card:hover {
     animation: fadeIn var(--transition-medium) var(--ease-in-out);
 }
 
+.lesson-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-3);
+}
+
+.lesson-card.completed:hover {
+    transform: translateY(-4px) scale(1.01);
+}
+
+.lesson-card md-card-actions {
+    opacity: 0.8;
+    transition: opacity var(--transition-quick) var(--ease-in-out);
+}
+
+.lesson-card:hover md-card-actions {
+    opacity: 1;
+}
+
 .lesson-content {
     font-size: 16px;
     line-height: 1.6;
@@ -206,6 +224,20 @@ md-dialog {
     background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     animation: scaleIn var(--transition-medium) var(--ease-bounce);
+    transition: all var(--transition-medium) var(--ease-out-expo);
+}
+
+md-dialog:hover {
+    box-shadow: var(--shadow-3);
+    transform: scale(1.01);
+}
+
+md-dialog md-toolbar {
+    transition: background-color var(--transition-quick) var(--ease-in-out);
+}
+
+md-dialog:hover md-toolbar {
+    background-color: var(--accent-primary) !important;
 }
 
 md-dialog.ng-enter {
@@ -218,6 +250,17 @@ md-dialog.ng-leave {
 
 md-list-item {
     color: var(--text-primary) !important;
+    transition: all var(--transition-quick) var(--ease-out-expo);
+}
+
+md-list-item:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+md-list-item.selected {
+    border-left: 3px solid var(--accent-primary);
+    background-color: var(--bg-tertiary);
 }
 
 md-button.md-primary {
@@ -254,6 +297,12 @@ md-button.md-primary.md-raised {
 md-button.md-primary.md-raised:hover {
     box-shadow: var(--shadow-2);
     transform: translateY(-1px);
+    background-color: var(--accent-secondary) !important;
+}
+
+md-button.md-primary.md-raised:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-1);
 }
 
 .md-subhead {
