@@ -147,8 +147,10 @@ require (
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
-	k8s.io/api v0.0.0-20171027084545-218912509d74 // indirect
-	k8s.io/kube-openapi v0.0.0-20171101183504-39a7bf85c140 // indirect
+	k8s.io/api v0.20.0 // indirect
+	k8s.io/apimachinery v0.20.0 // indirect
+	k8s.io/client-go v0.20.0 // indirect
+	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd // indirect
 	rsc.io/binaryregexp v0.2.0 // indirect
 	rsc.io/quote/v3 v3.1.0 // indirect
 	rsc.io/sampler v1.3.0 // indirect
