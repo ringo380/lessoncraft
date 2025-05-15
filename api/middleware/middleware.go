@@ -9,7 +9,13 @@ import (
 
 	"golang.org/x/time/rate"
 	"github.com/sirupsen/logrus"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go/config"
+	"lessoncraft/api/metrics"
 )
+
+var tracer opentracing.Tracer
 
 type ErrorResponse struct {
 	Error       string      `json:"error"`
@@ -77,21 +83,56 @@ func RateLimitMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func init() {
+	cfg := &config.Configuration{
+		ServiceName: "lessoncraft",
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+	t, _ := cfg.NewTracer(config.Logger(jaeger.StdLogger))
+	tracer = t
+	opentracing.SetGlobalTracer(tracer)
+}
+
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		span, ctx := opentracing.StartSpanFromContext(r.Context(), "http_request")
+		defer span.Finish()
+
+		// Add trace ID to request context
+		traceID := span.Context().(jaeger.SpanContext).TraceID()
+		r = r.WithContext(ctx)
 
 		// Create a custom response writer to capture the status code
 		rw := &responseWriter{w, http.StatusOK}
 		next.ServeHTTP(rw, r)
 
+		duration := time.Since(start)
+
+		// Record metrics
+		metrics.RequestDuration.WithLabelValues(
+			r.URL.Path,
+			r.Method,
+			string(rw.status),
+		).Observe(duration.Seconds())
+
 		logger.WithFields(logrus.Fields{
 			"method":     r.Method,
-			"path":       r.URL.Path,
-			"status":     rw.status,
-			"duration":   time.Since(start),
+			"path":      r.URL.Path,
+			"status":    rw.status,
+			"duration":  duration,
+			"trace_id":  traceID.String(),
 			"user_agent": r.UserAgent(),
 			"request_id": r.Header.Get("X-Request-ID"),
+			"remote_ip": r.RemoteAddr,
+			"host":     r.Host,
+			"protocol": r.Proto,
 		}).Info("Request completed")
 	})
 }

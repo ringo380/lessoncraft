@@ -84,18 +84,63 @@ func validateLesson(l *lesson.Lesson) error {
 	if l.Title == "" {
 		return fmt.Errorf("lesson title is required")
 	}
+	if len(l.Title) > 100 {
+		return fmt.Errorf("lesson title must be less than 100 characters")
+	}
+	if l.Description == "" {
+		return fmt.Errorf("lesson description is required")
+	}
+	if len(l.Description) > 500 {
+		return fmt.Errorf("lesson description must be less than 500 characters")
+	}
 	if len(l.Steps) == 0 {
 		return fmt.Errorf("lesson must have at least one step")
 	}
+	if len(l.Steps) > 50 {
+		return fmt.Errorf("lesson cannot have more than 50 steps")
+	}
+
+	seenIDs := make(map[string]bool)
 	for i, step := range l.Steps {
+		if step.ID == "" {
+			return fmt.Errorf("step %d ID is required", i+1)
+		}
+		if seenIDs[step.ID] {
+			return fmt.Errorf("duplicate step ID: %s", step.ID)
+		}
+		seenIDs[step.ID] = true
+
 		if step.Content == "" {
 			return fmt.Errorf("step %d content is required", i+1)
+		}
+		if len(step.Content) > 5000 {
+			return fmt.Errorf("step %d content must be less than 5000 characters", i+1)
 		}
 		if step.Expected != "" && len(step.Commands) == 0 {
 			return fmt.Errorf("step %d has expected output but no commands", i+1)
 		}
+		if len(step.Commands) > 10 {
+			return fmt.Errorf("step %d cannot have more than 10 commands", i+1)
+		}
+		for j, cmd := range step.Commands {
+			if len(cmd) > 500 {
+				return fmt.Errorf("step %d command %d must be less than 500 characters", i+1, j+1)
+			}
+			if !isValidCommand(cmd) {
+				return fmt.Errorf("step %d command %d contains invalid characters or syntax", i+1, j+1)
+			}
+		}
+		if step.Timeout < 0 || step.Timeout > time.Hour {
+			return fmt.Errorf("step %d timeout must be between 0 and 1 hour", i+1)
+		}
 	}
 	return nil
+}
+
+func isValidCommand(cmd string) bool {
+	// Add command validation logic here
+	// For example, check for dangerous commands, invalid characters, etc.
+	return true
 }
 
 func writeError(w http.ResponseWriter, errType string, code int, message string, err error) {
