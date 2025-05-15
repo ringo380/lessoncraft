@@ -1,16 +1,54 @@
-@import url('https://fonts.googleapis.com/css?family=Rationale');
+@import url('https://fonts.googleapis.com/css?family=Rationale|Inter:400,500,600');
+
+:root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #242424;
+    --bg-tertiary: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --accent-primary: #2196F3;
+    --accent-secondary: #1976D2;
+    --border-color: #333333;
+    --success-color: #4CAF50;
+    --warning-color: #FFC107;
+    --error-color: #F44336;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+}
 
 .selected button {
-    background-color: rgba(158,158,158,0.2);
+    background-color: var(--bg-tertiary);
+}
+
+md-sidenav {
+    background-color: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color);
+}
+
+md-toolbar {
+    background-color: var(--bg-tertiary) !important;
+}
+
+md-card {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
 }
 
 .terminal-container {
-    background-color: #000;
+    background-color: var(--bg-primary);
     padding: 0;
     display: flex;
     align-items: stretch;
     justify-content: stretch;
     flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .terminal-instance{
@@ -25,7 +63,76 @@
 }
 
 .welcome {
-    background-color: #e7e7e7;
+    background-color: var(--bg-secondary);
+}
+
+.lesson-card {
+    margin: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.lesson-content {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.lesson-commands {
+    background-color: var(--bg-tertiary);
+    padding: 16px;
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.lesson-commands code {
+    display: block;
+    padding: 8px;
+    margin: 4px 0;
+    background-color: var(--bg-primary);
+    border-radius: 4px;
+    color: var(--accent-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+md-dialog {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+md-list-item {
+    color: var(--text-primary) !important;
+}
+
+md-button.md-primary {
+    color: var(--accent-primary) !important;
+}
+
+md-button.md-primary.md-raised {
+    background-color: var(--accent-primary) !important;
+    color: white !important;
+}
+
+.md-subhead {
+    color: var(--text-secondary) !important;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
 }
 
 .welcome > div {
