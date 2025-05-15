@@ -62,17 +62,52 @@ func (h *LessonHandler) getLesson(w http.ResponseWriter, r *http.Request) {
 func (h *LessonHandler) createLesson(w http.ResponseWriter, r *http.Request) {
 	var lesson lesson.Lesson
 	if err := json.NewDecoder(r.Body).Decode(&lesson); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, "InvalidRequest", http.StatusBadRequest, "Invalid lesson format", err)
+		return
+	}
+
+	if err := validateLesson(&lesson); err != nil {
+		writeError(w, "ValidationError", http.StatusBadRequest, "Lesson validation failed", err)
 		return
 	}
 	
 	if err := h.store.CreateLesson(&lesson); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, "DatabaseError", http.StatusInternalServerError, "Failed to create lesson", err)
 		return
 	}
 	
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(lesson)
+}
+
+func validateLesson(l *lesson.Lesson) error {
+	if l.Title == "" {
+		return fmt.Errorf("lesson title is required")
+	}
+	if len(l.Steps) == 0 {
+		return fmt.Errorf("lesson must have at least one step")
+	}
+	for i, step := range l.Steps {
+		if step.Content == "" {
+			return fmt.Errorf("step %d content is required", i+1)
+		}
+		if step.Expected != "" && len(step.Commands) == 0 {
+			return fmt.Errorf("step %d has expected output but no commands", i+1)
+		}
+	}
+	return nil
+}
+
+func writeError(w http.ResponseWriter, errType string, code int, message string, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(ErrorResponse{
+		Error:     errType,
+		Code:      code,
+		Message:   message,
+		Details:   err.Error(),
+		TimeStamp: time.Now(),
+	})
 }
 
 func (h *LessonHandler) updateLesson(w http.ResponseWriter, r *http.Request) {
