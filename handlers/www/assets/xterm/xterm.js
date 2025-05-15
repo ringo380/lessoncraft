@@ -4134,6 +4134,10 @@ var Terminal = (function (_super) {
         _this._onScroll = new EventEmitter2_1.EventEmitter2();
         _this._onSelectionChange = new EventEmitter2_1.EventEmitter2();
         _this._onTitleChange = new EventEmitter2_1.EventEmitter2();
+        _this._onLessonStart = new EventEmitter2_1.EventEmitter2();
+        _this._onLessonStep = new EventEmitter2_1.EventEmitter2();
+        _this._currentLesson = null;
+        _this._currentStep = 0;
         _this.options = Clone_1.clone(options);
         _this._setup();
         _this.onCursorMove(function () { return _this.emit('cursormove'); });
@@ -4189,6 +4193,16 @@ var Terminal = (function (_super) {
     });
     Object.defineProperty(Terminal.prototype, "onTitleChange", {
         get: function () { return this._onTitleChange.event; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Terminal.prototype, "onLessonStart", {
+        get: function () { return this._onLessonStart.event; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Terminal.prototype, "onLessonStep", {
+        get: function () { return this._onLessonStep.event; },
         enumerable: true,
         configurable: true
     });
