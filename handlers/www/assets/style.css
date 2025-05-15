@@ -22,6 +22,45 @@
     --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
     --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
     --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+
+    /* Animation curves */
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Define keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 body {
@@ -47,8 +86,9 @@ md-card {
     background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border-color);
-    transition: all var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-medium) var(--ease-out-expo);
     box-shadow: var(--shadow-1);
+    animation: scaleIn var(--transition-medium) var(--ease-out-expo);
 }
 
 md-card:hover {
@@ -102,6 +142,15 @@ md-card:hover {
     margin: 16px;
     border-radius: 8px;
     overflow: hidden;
+    animation: slideInRight var(--transition-medium) var(--ease-out-expo);
+}
+
+.lesson-card.completed {
+    animation: pulse var(--transition-slow) var(--ease-bounce);
+}
+
+.lesson-card md-card-content {
+    animation: fadeIn var(--transition-medium) var(--ease-in-out);
 }
 
 .lesson-content {
@@ -156,6 +205,15 @@ md-card:hover {
 md-dialog {
     background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
+    animation: scaleIn var(--transition-medium) var(--ease-bounce);
+}
+
+md-dialog.ng-enter {
+    animation: scaleIn var(--transition-medium) var(--ease-bounce);
+}
+
+md-dialog.ng-leave {
+    animation: fadeIn var(--transition-quick) var(--ease-in-out) reverse;
 }
 
 md-list-item {
