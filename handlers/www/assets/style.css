@@ -241,7 +241,7 @@ md-card:hover {
 
 .terminal-container {
     background-color: var(--bg-primary);
-    padding: 0;
+    padding: var(--terminal-padding);
     display: flex;
     align-items: stretch;
     justify-content: stretch;
@@ -249,6 +249,46 @@ md-card:hover {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     overflow: hidden;
+    transition: all var(--transition-medium) var(--ease-spring);
+    position: relative;
+}
+
+.terminal-container:focus-within {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-2);
+}
+
+.terminal-container[aria-busy="true"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-primary);
+    animation: loadingBar 2s var(--ease-out-expo) infinite;
+}
+
+@keyframes loadingBar {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.terminal-instance {
+    width: 100%;
+    font-size: var(--terminal-font-size);
+    line-height: var(--terminal-line-height);
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+    .terminal-container {
+        border: 2px solid CanvasText;
+    }
+    
+    .terminal-container:focus-within {
+        border-color: Highlight;
+    }
 }
 
 .terminal-instance{
@@ -332,12 +372,76 @@ md-card:hover {
     transform: scale(1.01);
 }
 
-@media (max-width: 768px) {
+/* Enhanced responsive breakpoints */
+@media (max-width: 320px) {
+    .lesson-commands code {
+        padding: var(--spacing-sm);
+        margin: var(--spacing-xs) 0;
+        font-size: var(--text-xs);
+    }
+}
+
+@media (min-width: 321px) and (max-width: 768px) {
     .lesson-commands code {
         padding: var(--spacing-lg) var(--spacing-md);
         margin: var(--spacing-md) 0;
         font-size: var(--text-sm);
     }
+}
+
+@media (min-width: 1400px) {
+    .terminal-container {
+        max-height: 80vh;
+    }
+    
+    .lesson-content {
+        font-size: var(--text-lg);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+}
+
+/* Form element accessibility */
+input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+    max-width: 100%;
+    transition: all var(--transition-quick) var(--ease-in-out);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* ARIA live regions for screen readers */
+[aria-live="polite"],
+[aria-live="assertive"] {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+/* Animation states */
+.is-entering {
+    animation: slideInRight var(--transition-medium) var(--ease-spring);
+}
+
+.is-exiting {
+    animation: fadeOut var(--transition-quick) var(--ease-in-out);
+}
+
+.is-loading {
+    animation: pulse 2s var(--ease-in-out) infinite;
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; }
+}
     
     .lesson-commands code::after {
         opacity: 0.5;
