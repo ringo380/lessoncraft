@@ -141,6 +141,12 @@ func main() {
 
 	ro := mux.NewRouter()
 	ro.HandleFunc("/ping", ping).Methods("GET")
+	
+	// Add lesson routes
+	ro.HandleFunc("/api/lessons", listLessons).Methods("GET")
+	ro.HandleFunc("/api/lessons/{id}", getLesson).Methods("GET")
+	ro.HandleFunc("/api/lessons/{id}/start", startLesson).Methods("POST")
+	
 	n := negroni.Classic()
 	n.UseHandler(ro)
 

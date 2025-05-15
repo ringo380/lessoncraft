@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
+
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/play-with-docker/play-with-docker/config"
 	"github.com/play-with-docker/play-with-docker/docker"
@@ -17,11 +23,33 @@ import (
 	"github.com/play-with-docker/play-with-docker/scheduler"
 	"github.com/play-with-docker/play-with-docker/scheduler/task"
 	"github.com/play-with-docker/play-with-docker/storage"
+	
+	"lessoncraft/api"
+	"lessoncraft/api/store"
 )
 
 func main() {
 	config.ParseFlags()
 
+	// Initialize MongoDB connection
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
+	mongoURI := os.Getenv("MONGODB_URI")
+	if mongoURI == "" {
+		mongoURI = "mongodb://localhost:27017"
+	}
+	
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
+	if err != nil {
+		log.Fatal("Error connecting to MongoDB: ", err)
+	}
+	defer client.Disconnect(ctx)
+	
+	db := client.Database("lessoncraft")
+	lessonStore := store.NewMongoLessonStore(db)
+
+	// Initialize core PWD components
 	e := initEvent()
 	s := initStorage()
 	df := initDockerFactory(s)
@@ -52,13 +80,33 @@ func main() {
 		log.Fatalf("Cannot parse duration Got: %v", err)
 	}
 
-	playground := types.Playground{Domain: config.PlaygroundDomain, DefaultDinDInstanceImage: "franela/dind", AvailableDinDInstanceImages: []string{"franela/dind"}, AllowWindowsInstances: config.NoWindows, DefaultSessionDuration: d, Extras: map[string]interface{}{"LoginRedirect": "http://localhost:3000"}, Privileged: true}
+	playground := types.Playground{
+		Domain: config.PlaygroundDomain,
+		DefaultDinDInstanceImage: "franela/dind",
+		AvailableDinDInstanceImages: []string{"franela/dind"},
+		AllowWindowsInstances: config.NoWindows,
+		DefaultSessionDuration: d,
+		Extras: map[string]interface{}{"LoginRedirect": "http://localhost:3000"},
+		Privileged: true,
+	}
 	if _, err := core.PlaygroundNew(playground); err != nil {
 		log.Fatalf("Cannot create default playground. Got: %v", err)
 	}
 
+	// Initialize API handlers
+	router := mux.NewRouter()
+	apiHandler := api.NewApiHandler(lessonStore)
+	apiHandler.RegisterRoutes(router)
+
+	// Bootstrap PWD handlers
 	handlers.Bootstrap(core, e)
-	handlers.Register(nil)
+	handlers.Register(router)
+
+	// Start server
+	log.Println("Starting server on :8080")
+	if err := http.ListenAndServe(":8080", router); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initStorage() storage.StorageApi {
