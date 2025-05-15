@@ -8,13 +8,13 @@ services:
         volumes:
             - ./haproxy:/usr/local/etc/haproxy
 
-    pwd:
-        # pwd daemon container always needs to be named this way
-        container_name: pwd
+    lessoncraft:
+        # Main application container
+        container_name: lessoncraft
         # use the latest golang image
         image: golang
         # go to the right place and starts the app
-        command: /bin/sh -c 'ssh-keygen -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key >/dev/null; cd /go/src/; if [ -e /runbin/pwd ]; then /runbin/pwd  -save /pwd/sessions -name l2; else go run api.go -save /pwd/sessions -name l2; fi'
+        command: /bin/sh -c 'ssh-keygen -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key >/dev/null; cd /go/src/; if [ -e /runbin/lessoncraft ]; then /runbin/lessoncraft -save /lessoncraft/sessions -name l2; else go run api.go -save /lessoncraft/sessions -name l2; fi'
         environment:
           - APPARMOR_PROFILE=docker-dind
         volumes:
@@ -22,7 +22,7 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
             # mount the box mounted shared folder to the container
             - $PWD:/go/src
-            - sessions:/pwd
+            - sessions:/lessoncraft
     l2:
         container_name: l2
         # use the latest golang image
@@ -32,7 +32,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - $PWD:/go/src
-            - networks:/pwd
+            - networks:/lessoncraft
         ports:
             - "8022:22"
             - "8053:53"
