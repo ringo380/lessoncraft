@@ -1,9 +1,6 @@
 # LessonCraft
 
-LessonCraft gives you an interactive environment to build, test, and run Docker containers, originally based on Play With Docker but reimagined for modern DevOps education and experimentation.
-Where you can build and run Docker containers and even create clusters with Docker features like Swarm Mode.
-
-Under the hood DIND or Docker-in-Docker is used to give the effect of multiple VMs/PCs.
+LessonCraft is a web-based e-learning environment built to provide a simple and straightforward way to build and experience e-learning lessons that utilize a customized markdown syntax alognside interactive, live environments dynamically created docker containers and clusters.
 
 A live deployment of LessonCraft is coming soon. Stay tuned for updates!
 
@@ -44,12 +41,6 @@ docker-compose up
 
 Navigate to [http://localhost](http://localhost) and click "Start" to begin a new LessonCraft session, followed by "ADD NEW INSTANCE" to launch a new terminal instance.
 
-Notes:
-
-* There is a hard-coded limit of 5 Docker playgrounds per session. After 4 hours sessions are deleted.
-* If you want to override the DIND version or image then set the environmental variable i.e.
-  `DIND_IMAGE=franela/docker<version>-rc:dind`. Take into account that you can't use standard `dind` images, only [franela](https://hub.docker.com/r/franela/) images are currently supported, though future versions of LessonCraft will expand compatibility.
-
 ### Port forwarding
 
 In order for port forwarding to work correctly in development you need to make `*.localhost` to resolve to `127.0.0.1`. That way when you try to access  `pwd10-0-0-1-8080.host1.localhost`, then you're forwarded correctly to your local LessonCraft server.
@@ -64,11 +55,6 @@ Don't forget to change your computer's default DNS to use the dnsmasq server to 
 
 ## FAQ
 
-### How can I connect to a published port from the outside world?
-
-
-If you need to access your services from outside, use the following URL pattern `http://ip<hyphen-ip>-<session_jd>-<port>.direct.labs.play-with-docker.com` (i.e: http://ip2-135-3-b8ir6vbg5vr00095iil0-8080.direct.labs.play-with-docker.com).
-
 ### Why is LessonCraft running in ports 80 and 443? Can I change that?
 
 No, it needs to run on those ports for DNS resolve to work. Ideas or suggestions about how to improve this
@@ -78,5 +64,5 @@ are welcome
 
 ### How can I use Copy / Paste shortcuts?
 
-Ctrl  + insert  : Copy<br>
-shift + insert  : Paste
+Ctrl  + insert  : Copy
+Shift + insert  : Paste
