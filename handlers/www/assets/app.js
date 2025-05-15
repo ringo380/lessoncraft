@@ -19,10 +19,13 @@
     }
   }
 
-  app.controller('PlayController', ['$scope', '$rootScope', '$log', '$http', '$location', '$timeout', '$mdDialog', '$window', 'TerminalService', 'KeyboardShortcutService', 'InstanceService', 'SessionService', 'Upload', function($scope, $rootScope,  $log, $http, $location, $timeout, $mdDialog, $window, TerminalService, KeyboardShortcutService, InstanceService, SessionService, Upload) {
+  app.controller('PlayController', ['$scope', '$rootScope', '$log', '$http', '$location', '$timeout', '$mdDialog', '$window', 'TerminalService', 'KeyboardShortcutService', 'InstanceService', 'SessionService', 'LessonService', 'Upload', function($scope, $rootScope,  $log, $http, $location, $timeout, $mdDialog, $window, TerminalService, KeyboardShortcutService, InstanceService, SessionService, LessonService, Upload) {
     $scope.sessionId = SessionService.getCurrentSessionId();
     $rootScope.instances = [];
     $scope.idx = {};
+    $scope.currentLesson = null;
+    $scope.currentStep = 0;
+    $scope.stepCompleted = false;
     $scope.host = window.location.host;
     $scope.idxByHostname = {};
     $rootScope.selectedInstance = null;
@@ -546,6 +549,82 @@
         $scope.isInstanceBeingDeleted = false;
       }
     }
+    $scope.browseLesson = function() {
+      $mdDialog.show({
+        controller: 'LessonBrowserController',
+        templateUrl: 'lesson-browser.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: true
+      }).then(function(lesson) {
+        if (lesson) {
+          $scope.startLesson(lesson.ID);
+        }
+      });
+    };
+
+    $scope.startLesson = function(lessonId) {
+      LessonService.getLesson(lessonId).then(function(lesson) {
+        $scope.currentLesson = lesson;
+        $scope.currentStep = 0;
+        $scope.stepCompleted = false;
+        if ($scope.selectedInstance && $scope.selectedInstance.term) {
+          $scope.selectedInstance.term.startLesson(lesson);
+        }
+      });
+    };
+
+    $scope.nextStep = function() {
+      if ($scope.currentStep < $scope.currentLesson.Steps.length - 1) {
+        $scope.currentStep++;
+        $scope.stepCompleted = false;
+        if ($scope.selectedInstance && $scope.selectedInstance.term) {
+          $scope.selectedInstance.term._renderCurrentStep();
+        }
+      }
+    };
+
+    $scope.previousStep = function() {
+      if ($scope.currentStep > 0) {
+        $scope.currentStep--;
+        if ($scope.selectedInstance && $scope.selectedInstance.term) {
+          $scope.selectedInstance.term._renderCurrentStep();
+        }
+      }
+    };
+  }])
+  .service('LessonService', ['$http', function($http) {
+    return {
+      getAvailableLessons: function() {
+        return $http.get('/api/lessons').then(function(response) {
+          return response.data;
+        });
+      },
+      getLesson: function(id) {
+        return $http.get('/api/lessons/' + id).then(function(response) {
+          return response.data;
+        });
+      },
+      validateStep: function(lessonId, stepIndex, output) {
+        return $http.post('/api/lessons/' + lessonId + '/steps/' + stepIndex + '/validate', {
+          output: output
+        });
+      }
+    };
+  }])
+  .controller('LessonBrowserController', ['$scope', '$mdDialog', 'LessonService', function($scope, $mdDialog, LessonService) {
+    $scope.lessons = [];
+    
+    LessonService.getAvailableLessons().then(function(lessons) {
+      $scope.lessons = lessons;
+    });
+
+    $scope.selectLesson = function(lesson) {
+      $mdDialog.hide(lesson);
+    };
+
+    $scope.cancel = function() {
+      $mdDialog.cancel();
+    };
   }])
   .config(['$mdIconProvider', '$locationProvider', '$mdThemingProvider', function($mdIconProvider, $locationProvider, $mdThemingProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});

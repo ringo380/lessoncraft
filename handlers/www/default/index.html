@@ -74,11 +74,33 @@
               </md-sidenav>
               <md-content flex layout-padding ng-if="!instances.length">
                 <div layout="column" layout-align="top center">
-                  <p>Add instances to your playground.</p>
+                  <p>Add instances to your playground or start a lesson.</p>
                   <p><strong>Sessions and all their instances are deleted after {{ttl}} hours.</strong></p>
+                  <md-button class="md-primary md-raised" ng-click="browseLesson()">Browse Lessons</md-button>
                 </div>
 
                 <div flex></div>
+              </md-content>
+              <md-content flex layout="column" ng-if="currentLesson">
+                <md-card class="lesson-card">
+                    <md-card-title>
+                        <md-card-title-text>
+                            <span class="md-headline">{{currentLesson.Title}}</span>
+                            <span class="md-subhead">Step {{currentStep + 1}} of {{currentLesson.Steps.length}}</span>
+                        </md-card-title-text>
+                    </md-card-title>
+                    <md-card-content>
+                        <div class="lesson-content" ng-bind-html="currentLesson.Steps[currentStep].Content"></div>
+                        <div class="lesson-commands" ng-if="currentLesson.Steps[currentStep].Commands">
+                            <h4>Commands:</h4>
+                            <code ng-repeat="cmd in currentLesson.Steps[currentStep].Commands">{{cmd}}</code>
+                        </div>
+                    </md-card-content>
+                    <md-card-actions layout="row" layout-align="end center">
+                        <md-button class="md-primary" ng-click="previousStep()" ng-disabled="currentStep === 0">Previous</md-button>
+                        <md-button class="md-primary" ng-click="nextStep()" ng-disabled="!stepCompleted">Next</md-button>
+                    </md-card-actions>
+                </md-card>
               </md-content>
               <md-content flex layout="column" ng-repeat="instance in instances" ng-show="instance.name == selectedInstance.name" ngf-drop class="drop-box" ngf-drag-over-class="'dragover'" ngf-max-size="100000000" ngf-change="uploadFiles($files, $invalidFiles)" ngf-multiple="true">
                   <md-card class="stats" md-theme="default" md-theme-watch>
