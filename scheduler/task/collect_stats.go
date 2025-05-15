@@ -13,11 +13,11 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	units "github.com/docker/go-units"
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/play-with-docker/play-with-docker/docker"
-	"github.com/play-with-docker/play-with-docker/event"
-	"github.com/play-with-docker/play-with-docker/pwd/types"
-	"github.com/play-with-docker/play-with-docker/router"
-	"github.com/play-with-docker/play-with-docker/storage"
+	"github.com/ringo380/lessoncraft/docker"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/pwd/types"
+	"github.com/ringo380/lessoncraft/router"
+	"github.com/ringo380/lessoncraft/storage"
 )
 
 type InstanceStats struct {

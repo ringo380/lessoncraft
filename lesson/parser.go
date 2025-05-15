@@ -43,9 +43,9 @@ func (e *lessonExtension) Extend(m goldmark.Markdown) {
 }
 
 var (
-	dockerBlockRegex = regexp.MustCompile(`^```docker\s*(.*?)\s*$`)
-	expectBlockRegex = regexp.MustCompile(`^```expect\s*(.*?)\s*$`)
-	questionRegex    = regexp.MustCompile(`^```question\s*(.*?)\s*$`)
+	dockerBlockRegex = regexp.MustCompile("^```docker\\s*(.*?)\\s*$")
+	expectBlockRegex = regexp.MustCompile("^```expect\\s*(.*?)\\s*$")
+	questionRegex    = regexp.MustCompile("^```question\\s*(.*?)\\s*$")
 )
 
 func parseCodeBlock(b []byte) (ast.Node, bool) {

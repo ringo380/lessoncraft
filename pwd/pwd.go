@@ -7,13 +7,13 @@ import (
 	"net"
 	"time"
 
-	"github.com/play-with-docker/play-with-docker/docker"
-	"github.com/play-with-docker/play-with-docker/event"
-	"github.com/play-with-docker/play-with-docker/id"
-	"github.com/play-with-docker/play-with-docker/provisioner"
-	"github.com/play-with-docker/play-with-docker/pwd/types"
-	"github.com/play-with-docker/play-with-docker/storage"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/ringo380/lessoncraft/docker"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/id"
+	"github.com/ringo380/lessoncraft/provisioner"
+	"github.com/ringo380/lessoncraft/pwd/types"
+	"github.com/ringo380/lessoncraft/storage"
 )
 
 var (

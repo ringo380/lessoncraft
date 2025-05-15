@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/play-with-docker/play-with-docker/event"
-	"github.com/play-with-docker/play-with-docker/k8s"
-	"github.com/play-with-docker/play-with-docker/pwd/types"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/k8s"
+	"github.com/ringo380/lessoncraft/pwd/types"
 )
 
 type checkK8sClusterStatusTask struct {

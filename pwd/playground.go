@@ -3,8 +3,9 @@ package pwd
 import (
 	"log"
 
-	"github.com/play-with-docker/play-with-docker/event"
-	"github.com/play-with-docker/play-with-docker/pwd/types"
+	"github.com/gofrs/uuid"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/pwd/types"
 )
 
 func (p *pwd) PlaygroundNew(playground types.Playground) (*types.Playground, error) {

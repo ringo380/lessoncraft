@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/play-with-docker/play-with-docker/pwd/types"
+	"github.com/ringo380/lessoncraft/pwd/types"
 	"github.com/stretchr/testify/assert"
 )
 

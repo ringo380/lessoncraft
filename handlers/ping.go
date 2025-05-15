@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
-	"github.com/play-with-docker/play-with-docker/config"
+	"github.com/ringo380/lessoncraft/config"
 	"github.com/shirou/gopsutil/load"
 )
 

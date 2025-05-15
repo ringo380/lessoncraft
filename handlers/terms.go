@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/play-with-docker/play-with-docker/event"
-	"github.com/play-with-docker/play-with-docker/pwd/types"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/pwd/types"
 
 	"golang.org/x/text/encoding"
 )

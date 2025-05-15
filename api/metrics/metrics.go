@@ -8,8 +8,8 @@ import (
 var (
 	// Request metrics
 	RequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "lessoncraft_http_request_duration_seconds",
-		Help: "Duration of HTTP requests in seconds",
+		Name:    "lessoncraft_http_request_duration_seconds",
+		Help:    "Duration of HTTP requests in seconds",
 		Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
 	}, []string{"handler", "method", "status"})
 
@@ -30,8 +30,8 @@ var (
 	})
 
 	LessonDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "lessoncraft_lesson_duration_seconds",
-		Help: "Duration of lesson completions",
+		Name:    "lessoncraft_lesson_duration_seconds",
+		Help:    "Duration of lesson completions",
 		Buckets: prometheus.ExponentialBuckets(60, 2, 10), // From 1min to ~17hrs
 	}, []string{"lesson_id"})
 
@@ -42,8 +42,8 @@ var (
 	}, []string{"lesson_id", "step_index", "success"})
 
 	StepDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "lessoncraft_step_duration_seconds",
-		Help: "Duration of step completions",
+		Name:    "lessoncraft_step_duration_seconds",
+		Help:    "Duration of step completions",
 		Buckets: prometheus.ExponentialBuckets(10, 2, 8), // From 10s to ~42min
 	}, []string{"lesson_id", "step_index"})
 

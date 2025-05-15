@@ -7,24 +7,26 @@ import (
 	"runtime"
 	"time"
 
-	"golang.org/x/time/rate"
-	"github.com/sirupsen/logrus"
+	"lessoncraft/api/metrics"
+
 	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
-	"lessoncraft/api/metrics"
+	"golang.org/x/time/rate"
 )
 
 var tracer opentracing.Tracer
 
 type ErrorResponse struct {
-	Error       string      `json:"error"`
-	Code        int         `json:"code"`
-	Message     string      `json:"message"`
-	Details     interface{} `json:"details,omitempty"`
-	RequestID   string      `json:"request_id,omitempty"`
-	Stack       string      `json:"stack,omitempty"`
-	TimeStamp   time.Time   `json:"timestamp"`
+	Error     string      `json:"error"`
+	Code      int         `json:"code"`
+	Message   string      `json:"message"`
+	Details   interface{} `json:"details,omitempty"`
+	RequestID string      `json:"request_id,omitempty"`
+	Stack     string      `json:"stack,omitempty"`
+	TimeStamp time.Time   `json:"timestamp"`
 }
 
 var logger = logrus.New()
@@ -52,9 +54,9 @@ func ErrorHandler(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				json.NewEncoder(w).Encode(ErrorResponse{
 					Error:     "InternalServerError",
-					Code:     500,
-					Message:  "An unexpected error occurred",
-					Stack:    stackTrace,
+					Code:      500,
+					Message:   "An unexpected error occurred",
+					Stack:     stackTrace,
 					RequestID: r.Header.Get("X-Request-ID"),
 					TimeStamp: time.Now(),
 				})
@@ -73,8 +75,8 @@ func RateLimitMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusTooManyRequests)
 			json.NewEncoder(w).Encode(ErrorResponse{
 				Error:     "RateLimitExceeded",
-				Code:     429,
-				Message:  "Too many requests",
+				Code:      429,
+				Message:   "Too many requests",
 				TimeStamp: time.Now(),
 			})
 			return
@@ -87,15 +89,15 @@ func init() {
 	cfg := &config.Configuration{
 		ServiceName: "lessoncraft",
 		Sampler: &config.SamplerConfig{
-			Type:  "adaptive",  // Use adaptive sampling
-			Param: 0.01,       // Base sampling rate
-			MaxOperations: 100, // Max number of operations to track
+			Type:          "adaptive", // Use adaptive sampling
+			Param:         0.01,       // Base sampling rate
+			MaxOperations: 100,        // Max number of operations to track
 		},
 		Reporter: &config.ReporterConfig{
-			LogSpans: true,
+			LogSpans:            true,
 			BufferFlushInterval: 1 * time.Second,
-			QueueSize: 1000,
-			LocalAgentHostPort: "jaeger:6831",
+			QueueSize:           1000,
+			LocalAgentHostPort:  "jaeger:6831",
 		},
 		Tags: []opentracing.Tag{
 			{Key: "environment", Value: "production"},
@@ -143,15 +145,15 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 		logger.WithFields(logrus.Fields{
 			"method":     r.Method,
-			"path":      r.URL.Path,
-			"status":    rw.status,
-			"duration":  duration,
-			"trace_id":  traceID.String(),
+			"path":       r.URL.Path,
+			"status":     rw.status,
+			"duration":   duration,
+			"trace_id":   traceID.String(),
 			"user_agent": r.UserAgent(),
 			"request_id": r.Header.Get("X-Request-ID"),
-			"remote_ip": r.RemoteAddr,
-			"host":     r.Host,
-			"protocol": r.Proto,
+			"remote_ip":  r.RemoteAddr,
+			"host":       r.Host,
+			"protocol":   r.Proto,
 		}).Info("Request completed")
 	})
 }

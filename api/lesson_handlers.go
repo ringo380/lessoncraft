@@ -2,9 +2,14 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
-	"github.com/gorilla/mux"
+	"fmt"
 	"lessoncraft/lesson"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type LessonHandler struct {
@@ -50,7 +55,7 @@ func (h *LessonHandler) listLessons(w http.ResponseWriter, r *http.Request) {
 func (h *LessonHandler) getLesson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	lesson, err := h.store.GetLesson(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -70,12 +75,12 @@ func (h *LessonHandler) createLesson(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "ValidationError", http.StatusBadRequest, "Lesson validation failed", err)
 		return
 	}
-	
+
 	if err := h.store.CreateLesson(&lesson); err != nil {
 		writeError(w, "DatabaseError", http.StatusInternalServerError, "Failed to create lesson", err)
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(lesson)
 }
@@ -158,43 +163,43 @@ func writeError(w http.ResponseWriter, errType string, code int, message string,
 func (h *LessonHandler) updateLesson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	var lesson lesson.Lesson
 	if err := json.NewDecoder(r.Body).Decode(&lesson); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	if err := h.store.UpdateLesson(id, &lesson); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	json.NewEncoder(w).Encode(lesson)
 }
 
 func (h *LessonHandler) deleteLesson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	if err := h.store.DeleteLesson(id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *LessonHandler) startLesson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	lesson, err := h.store.GetLesson(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	
+
 	// Initialize lesson state
 	lesson.CurrentStep = 0
 	json.NewEncoder(w).Encode(lesson)
@@ -204,10 +209,10 @@ func (h *LessonHandler) completeStep(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	step := vars["step"]
-	
+
 	// Validate step completion
 	// TODO: Implement validation logic
-	
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -215,7 +220,7 @@ func (h *LessonHandler) validateStep(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	stepIndex := vars["step"]
-	
+
 	lesson, err := h.store.GetLesson(id)
 	if err != nil {
 		http.Error(w, "Lesson not found", http.StatusNotFound)
@@ -248,14 +253,14 @@ func (h *LessonHandler) validateStep(w http.ResponseWriter, r *http.Request) {
 
 	if normalizedOutput == normalizedExpected {
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"valid": true,
+			"valid":   true,
 			"message": "Step completed successfully",
 		})
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"valid": false,
-			"message": "Output does not match expected result",
+			"valid":    false,
+			"message":  "Output does not match expected result",
 			"expected": normalizedExpected,
 			"received": normalizedOutput,
 		})

@@ -13,9 +13,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/play-with-docker/play-with-docker/docker"
-	"github.com/play-with-docker/play-with-docker/event"
-	"github.com/play-with-docker/play-with-docker/pwd/types"
+	"github.com/ringo380/lessoncraft/docker"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/pwd/types"
 )
 
 var preparedSessions = map[string]bool{}

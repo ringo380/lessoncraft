@@ -23,7 +23,7 @@ import (
 	"lessoncraft/scheduler"
 	"lessoncraft/scheduler/task"
 	"lessoncraft/storage"
-	
+
 	"lessoncraft/api"
 	"lessoncraft/api/store"
 )
@@ -34,18 +34,18 @@ func main() {
 	// Initialize MongoDB connection
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
 		mongoURI = "mongodb://localhost:27017"
 	}
-	
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal("Error connecting to MongoDB: ", err)
 	}
 	defer client.Disconnect(ctx)
-	
+
 	db := client.Database("lessoncraft")
 	lessonStore := store.NewMongoLessonStore(db)
 
@@ -81,13 +81,13 @@ func main() {
 	}
 
 	playground := types.Playground{
-		Domain: config.PlaygroundDomain,
-		DefaultDinDInstanceImage: "franela/dind",
+		Domain:                      config.PlaygroundDomain,
+		DefaultDinDInstanceImage:    "franela/dind",
 		AvailableDinDInstanceImages: []string{"franela/dind"},
-		AllowWindowsInstances: config.NoWindows,
-		DefaultSessionDuration: d,
-		Extras: map[string]interface{}{"LoginRedirect": "http://localhost:3000"},
-		Privileged: true,
+		AllowWindowsInstances:       config.NoWindows,
+		DefaultSessionDuration:      d,
+		Extras:                      map[string]interface{}{"LoginRedirect": "http://localhost:3000"},
+		Privileged:                  true,
 	}
 	if _, err := core.PlaygroundNew(playground); err != nil {
 		log.Fatalf("Cannot create default playground. Got: %v", err)

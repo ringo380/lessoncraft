@@ -3,7 +3,7 @@ package storage
 import (
 	"errors"
 
-	"github.com/play-with-docker/play-with-docker/pwd/types"
+	"github.com/ringo380/lessoncraft/pwd/types"
 )
 
 var NotFoundError = errors.New("NotFound")

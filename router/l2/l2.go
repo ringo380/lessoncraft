@@ -17,8 +17,8 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/mux"
-	"github.com/play-with-docker/play-with-docker/config"
-	"github.com/play-with-docker/play-with-docker/router"
+	"github.com/ringo380/lessoncraft/config"
+	"github.com/ringo380/lessoncraft/router"
 	"github.com/shirou/gopsutil/load"
 	"github.com/urfave/negroni"
 )
@@ -141,12 +141,12 @@ func main() {
 
 	ro := mux.NewRouter()
 	ro.HandleFunc("/ping", ping).Methods("GET")
-	
+
 	// Add lesson routes
 	ro.HandleFunc("/api/lessons", listLessons).Methods("GET")
 	ro.HandleFunc("/api/lessons/{id}", getLesson).Methods("GET")
 	ro.HandleFunc("/api/lessons/{id}/start", startLesson).Methods("POST")
-	
+
 	n := negroni.Classic()
 	n.UseHandler(ro)
 
