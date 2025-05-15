@@ -134,7 +134,20 @@ func (h *LessonHandler) completeStep(w http.ResponseWriter, r *http.Request) {
 func (h *LessonHandler) validateStep(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
+	stepIndex := vars["step"]
 	
+	lesson, err := h.store.GetLesson(id)
+	if err != nil {
+		http.Error(w, "Lesson not found", http.StatusNotFound)
+		return
+	}
+
+	step, err := strconv.Atoi(stepIndex)
+	if err != nil || step < 0 || step >= len(lesson.Steps) {
+		http.Error(w, "Invalid step index", http.StatusBadRequest)
+		return
+	}
+
 	var output struct {
 		Output string `json:"output"`
 	}
@@ -142,9 +155,29 @@ func (h *LessonHandler) validateStep(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
-	// Validate output against expected result
-	// TODO: Implement validation logic
-	
-	w.WriteHeader(http.StatusOK)
+
+	currentStep := lesson.Steps[step]
+	if currentStep.Expected == "" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Normalize output and expected result
+	normalizedOutput := strings.TrimSpace(output.Output)
+	normalizedExpected := strings.TrimSpace(currentStep.Expected)
+
+	if normalizedOutput == normalizedExpected {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"valid": true,
+			"message": "Step completed successfully",
+		})
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"valid": false,
+			"message": "Output does not match expected result",
+			"expected": normalizedExpected,
+			"received": normalizedOutput,
+		})
+	}
 }
