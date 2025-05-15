@@ -5,3 +5,4 @@ node_modules
 /.aider.input.history
 /.aider.llm.history
 /.idea
+/.junie
