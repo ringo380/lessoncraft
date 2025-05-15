@@ -1,0 +1,42 @@
+<md-dialog aria-label="Lesson Browser">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Browse Lessons</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon class="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content" style="width:800px;">
+      <div layout="row" layout-sm="column" layout-align="space-around" ng-if="!lessons.length">
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+      </div>
+      <md-list flex>
+        <md-list-item class="md-3-line" ng-repeat="lesson in lessons" ng-click="selectLesson(lesson)">
+          <md-card md-theme="default" md-theme-watch style="width:100%">
+            <md-card-title>
+              <md-card-title-text>
+                <span class="md-headline">{{lesson.Title}}</span>
+                <span class="md-subhead">{{lesson.Description}}</span>
+              </md-card-title-text>
+            </md-card-title>
+            <md-card-content>
+              <p>Steps: {{lesson.Steps.length}}</p>
+              <p ng-if="lesson.EstimatedTime">Estimated time: {{lesson.EstimatedTime}}</p>
+            </md-card-content>
+          </md-card>
+        </md-list-item>
+      </md-list>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row">
+    <span flex></span>
+    <md-button ng-click="cancel()">
+      Cancel
+    </md-button>
+  </md-dialog-actions>
+</md-dialog>
