@@ -87,14 +87,33 @@ func init() {
 	cfg := &config.Configuration{
 		ServiceName: "lessoncraft",
 		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
+			Type:  "adaptive",  // Use adaptive sampling
+			Param: 0.01,       // Base sampling rate
+			MaxOperations: 100, // Max number of operations to track
 		},
 		Reporter: &config.ReporterConfig{
 			LogSpans: true,
+			BufferFlushInterval: 1 * time.Second,
+			QueueSize: 1000,
+			LocalAgentHostPort: "jaeger:6831",
+		},
+		Tags: []opentracing.Tag{
+			{Key: "environment", Value: "production"},
+			{Key: "version", Value: "1.0.0"},
 		},
 	}
-	t, _ := cfg.NewTracer(config.Logger(jaeger.StdLogger))
+
+	opts := []config.Option{
+		config.Logger(jaeger.StdLogger),
+		config.Metrics(metrics.NewPrometheusFactory(prometheus.DefaultRegisterer)),
+	}
+
+	t, closer, err := cfg.NewTracer(opts...)
+	if err != nil {
+		log.Fatalf("Could not initialize tracer: %s", err)
+	}
+	defer closer.Close()
+
 	tracer = t
 	opentracing.SetGlobalTracer(tracer)
 }
