@@ -1,35 +1,57 @@
-module github.com/play-with-docker/play-with-docker
+module lessoncraft
 
-go 1.23.0
+go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.12.15
-	github.com/containerd/containerd v1.0.0-beta.2
+	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1
+	github.com/Microsoft/go-winio v0.4.5
+	github.com/docker/distribution v2.6.0-rc.1.0.20170726174610-edc3ab29cdff+incompatible
 	github.com/docker/docker v1.4.2-0.20200309214505-aa6a9891b09c
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.2
-	github.com/google/go-github v13.0.1-0.20171014143926-a021c14a5f19+incompatible
-	github.com/gorilla/handlers v1.3.0
 	github.com/gorilla/mux v1.8.1
-	github.com/gorilla/securecookie v0.0.0-20160422134519-667fe4e3466a
 	github.com/gorilla/websocket v1.2.0
-	github.com/hashicorp/golang-lru v0.5.1
-	github.com/inconshreveable/go-vhost v0.0.0-20160627193104-06d84117953b
-	github.com/miekg/dns v0.0.0-20171019064225-822ae18e7187
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.22.0
-	github.com/rs/xid v0.0.0-20170604230408-02dd45c33376
-	github.com/satori/go.uuid v1.1.1-0.20170321230731-5bf94b69c6b6
-	github.com/shirou/gopsutil v2.16.13-0.20170924065440-6e221c482653+incompatible
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	github.com/urfave/negroni v0.2.0
-	golang.org/x/crypto v0.31.0
-	golang.org/x/net v0.33.0
-	golang.org/x/oauth2 v0.24.0
-	golang.org/x/sync v0.10.0
-	golang.org/x/text v0.21.0
-	google.golang.org/api v0.26.0
-	k8s.io/apimachinery v0.0.0-20171027084411-18a564baac72
-	k8s.io/client-go v5.0.1+incompatible
+	github.com/uber/jaeger-client-go v2.30.0+incompatible
+	github.com/yuin/goldmark v1.7.11
+	go.mongodb.org/mongo-driver v1.17.3
+	golang.org/x/time v0.11.0
+	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/golang/protobuf v1.5.0 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/uuid v1.6.0
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/montanaflynn/stats v0.7.1 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 )
 
 require (
