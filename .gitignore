@@ -1,3 +1,7 @@
 play-with-docker
 node_modules
 /vendor
+/.aider.chat.history.md
+/.aider.input.history
+/.aider.llm.history
+/.idea
