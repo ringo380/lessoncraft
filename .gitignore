@@ -6,3 +6,6 @@ node_modules
 /.aider.llm.history
 /.idea
 /.junie
+/.aider.tags.cache.v4/cache.db
+/.aider.tags.cache.v4/27/40/e12c6258daea9ad1bf249d66a041.val
+/.env.sample
