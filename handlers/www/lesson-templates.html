@@ -1,0 +1,48 @@
+<md-dialog aria-label="Lesson Templates">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Lesson Templates</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon class="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content" style="width:600px;">
+      <p>Select a template to use as a starting point for your lesson:</p>
+      
+      <md-list flex>
+        <md-list-item class="md-3-line" ng-repeat="template in templates" ng-click="selectTemplate(template)">
+          <md-card md-theme="default" md-theme-watch style="width:100%">
+            <md-card-title>
+              <md-card-title-text>
+                <span class="md-headline">{{template.name}}</span>
+                <span class="md-subhead">{{template.description}}</span>
+              </md-card-title-text>
+            </md-card-title>
+            <md-card-content>
+              <p>This template includes:</p>
+              <ul>
+                <li ng-if="template.content.includes('```docker')">Docker command blocks</li>
+                <li ng-if="template.content.includes('```expect')">Expected output blocks</li>
+                <li ng-if="template.content.includes('```question')">Question blocks</li>
+              </ul>
+            </md-card-content>
+            <md-card-actions layout="row" layout-align="end center">
+              <md-button class="md-primary">Select Template</md-button>
+            </md-card-actions>
+          </md-card>
+        </md-list-item>
+      </md-list>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row">
+    <span flex></span>
+    <md-button ng-click="cancel()">
+      Cancel
+    </md-button>
+  </md-dialog-actions>
+</md-dialog>

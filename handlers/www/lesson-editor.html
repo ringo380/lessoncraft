@@ -1,0 +1,98 @@
+<md-dialog aria-label="Lesson Editor" flex="90">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Lesson Editor</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon class="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content lesson-editor-container">
+      <div layout="row" layout-align="space-between start">
+        <div flex="45" class="editor-section">
+          <h3>Edit Lesson</h3>
+          <md-input-container class="md-block">
+            <label>Lesson Title</label>
+            <input ng-model="lesson.title" placeholder="Enter lesson title" required>
+          </md-input-container>
+          
+          <md-input-container class="md-block">
+            <label>Description</label>
+            <textarea ng-model="lesson.description" placeholder="Enter lesson description" rows="2" required></textarea>
+          </md-input-container>
+          
+          <div class="markdown-editor">
+            <label>Lesson Content (Markdown)</label>
+            <textarea ng-model="markdownContent" ng-change="updatePreview()" placeholder="Enter lesson content in markdown format" rows="20"></textarea>
+            <div class="editor-toolbar">
+              <md-button class="md-icon-button" ng-click="insertBlock('docker')" title="Insert Docker Block">
+                <md-icon class="material-icons">code</md-icon>
+              </md-button>
+              <md-button class="md-icon-button" ng-click="insertBlock('expect')" title="Insert Expect Block">
+                <md-icon class="material-icons">check_circle</md-icon>
+              </md-button>
+              <md-button class="md-icon-button" ng-click="insertBlock('question')" title="Insert Question Block">
+                <md-icon class="material-icons">help</md-icon>
+              </md-button>
+              <span flex></span>
+              <md-button class="md-icon-button" ng-click="loadTemplate()" title="Load Template">
+                <md-icon class="material-icons">description</md-icon>
+              </md-button>
+              <md-button class="md-icon-button" ng-click="validateContent()" title="Validate Content">
+                <md-icon class="material-icons">spellcheck</md-icon>
+              </md-button>
+            </div>
+          </div>
+          
+          <div class="validation-messages" ng-if="validationErrors.length > 0">
+            <h4>Validation Errors:</h4>
+            <ul>
+              <li ng-repeat="error in validationErrors" class="validation-error">{{error}}</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div flex="45" class="preview-section">
+          <h3>Preview</h3>
+          <div class="preview-container">
+            <div class="lesson-preview">
+              <h1>{{lesson.title || 'Lesson Title'}}</h1>
+              <p class="lesson-description">{{lesson.description || 'Lesson Description'}}</p>
+              
+              <div class="lesson-steps">
+                <div ng-repeat="step in previewSteps" class="lesson-step">
+                  <div ng-bind-html="step.content"></div>
+                  
+                  <div class="lesson-commands" ng-if="step.commands.length > 0">
+                    <h4>Commands:</h4>
+                    <code ng-repeat="cmd in step.commands">{{cmd}}</code>
+                  </div>
+                  
+                  <div class="lesson-expected" ng-if="step.expected">
+                    <h4>Expected Output:</h4>
+                    <pre>{{step.expected}}</pre>
+                  </div>
+                  
+                  <div class="lesson-question" ng-if="step.question">
+                    <h4>Question:</h4>
+                    <p>{{step.question}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row">
+    <md-button ng-click="cancel()">Cancel</md-button>
+    <span flex></span>
+    <md-button class="md-primary" ng-click="saveAsDraft()" ng-disabled="validationErrors.length > 0">Save as Draft</md-button>
+    <md-button class="md-primary md-raised" ng-click="saveAndPublish()" ng-disabled="validationErrors.length > 0">Save and Publish</md-button>
+  </md-dialog-actions>
+</md-dialog>

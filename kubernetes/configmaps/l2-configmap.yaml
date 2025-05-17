@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: l2-config
+data:
+  l2-subdomain: "direct"
+  l2-router-ip: ""  # This should be set to the host IP address for L2 router ping response

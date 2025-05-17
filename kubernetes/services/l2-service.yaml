@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: l2
+  labels:
+    app: l2
+spec:
+  ports:
+  - port: 22
+    targetPort: 22
+    name: ssh
+    protocol: TCP
+  - port: 53
+    targetPort: 53
+    name: dns
+    protocol: UDP
+  - port: 443
+    targetPort: 443
+    name: https
+    protocol: TCP
+  - port: 8080
+    targetPort: 8080
+    name: http
+    protocol: TCP
+  selector:
+    app: l2
+  type: ClusterIP

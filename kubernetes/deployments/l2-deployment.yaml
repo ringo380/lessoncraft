@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l2
+  labels:
+    app: l2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: l2
+  template:
+    metadata:
+      labels:
+        app: l2
+    spec:
+      containers:
+      - name: l2
+        image: lessoncraft-l2:latest  # Should be replaced with a versioned image in production
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 22
+          name: ssh
+        - containerPort: 53
+          name: dns
+        - containerPort: 443
+          name: https
+        - containerPort: 8080
+          name: http
+        env:
+        - name: L2_SUBDOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: l2-config
+              key: l2-subdomain
+        - name: L2_ROUTER_IP
+          valueFrom:
+            configMapKeyRef:
+              name: l2-config
+              key: l2-router-ip
+        - name: SSH_KEY_PATH
+          value: "/etc/ssh/ssh_host_rsa_key"
+        resources:
+          limits:
+            cpu: "1.0"
+            memory: "512Mi"
+          requests:
+            cpu: "0.2"
+            memory: "256Mi"
+        volumeMounts:
+        - name: networks-data
+          mountPath: /lessoncraft
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+          readOnly: true
+        - name: ssh-key
+          mountPath: /etc/ssh/ssh_host_rsa_key
+          subPath: ssh_host_rsa_key
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: networks-data
+        persistentVolumeClaim:
+          claimName: l2-networks-pvc
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: ssh-key
+        secret:
+          secretName: l2-secrets
+          defaultMode: 0600
+      securityContext:
+        # Some ports (22, 53) require root privileges
+        # In a production environment, consider using a more secure approach
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
