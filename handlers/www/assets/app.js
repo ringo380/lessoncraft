@@ -19,7 +19,7 @@
     }
   }
 
-  app.controller('PlayController', ['$scope', '$rootScope', '$log', '$http', '$location', '$timeout', '$mdDialog', '$window', 'TerminalService', 'KeyboardShortcutService', 'InstanceService', 'SessionService', 'LessonService', 'Upload', function($scope, $rootScope,  $log, $http, $location, $timeout, $mdDialog, $window, TerminalService, KeyboardShortcutService, InstanceService, SessionService, LessonService, Upload) {
+  app.controller('PlayController', ['$scope', '$rootScope', '$log', '$http', '$location', '$timeout', '$mdDialog', '$window', '$mdToast', 'TerminalService', 'KeyboardShortcutService', 'InstanceService', 'SessionService', 'LessonService', 'Upload', function($scope, $rootScope,  $log, $http, $location, $timeout, $mdDialog, $window, $mdToast, TerminalService, KeyboardShortcutService, InstanceService, SessionService, LessonService, Upload) {
     $scope.sessionId = SessionService.getCurrentSessionId();
     $rootScope.instances = [];
     $scope.idx = {};
@@ -459,6 +459,59 @@
         'width='+w+',height='+h+',resizable,scrollbars=yes,status=1');
     };
 
+    // Terminal toolbar functions
+    $scope.copyTerminalContent = function(instance) {
+      if (!instance.term) return;
+
+      var selection = instance.term.getSelection();
+      if (selection) {
+        // If there's a selection, copy that
+        navigator.clipboard.writeText(selection).then(function() {
+          // Show a brief success message
+          $mdToast.show(
+            $mdToast.simple()
+              .textContent('Selection copied to clipboard')
+              .position('bottom right')
+              .hideDelay(2000)
+          );
+        });
+      } else {
+        // If no selection, copy visible content
+        var content = instance.term.buffer.active.getLine(0).translateToString();
+        for (var i = 1; i < instance.term.buffer.active.length; i++) {
+          content += '\n' + instance.term.buffer.active.getLine(i).translateToString();
+        }
+        navigator.clipboard.writeText(content).then(function() {
+          $mdToast.show(
+            $mdToast.simple()
+              .textContent('Terminal content copied to clipboard')
+              .position('bottom right')
+              .hideDelay(2000)
+          );
+        });
+      }
+    };
+
+    $scope.clearTerminal = function(instance) {
+      if (!instance.term) return;
+      instance.term.clear();
+    };
+
+    $scope.toggleTerminalFullscreen = function(instance) {
+      if (!instance.term) return;
+
+      var container = document.querySelector('.container-' + instance.name);
+      if (container) {
+        container.classList.toggle('fullscreen');
+
+        // Resize the terminal after toggling fullscreen
+        setTimeout(function() {
+          instance.term.fit();
+          instance.term.focus();
+        }, 100);
+      }
+    };
+
     $scope.loadPlaygroundConf();
     $scope.getSession($scope.sessionId);
 
@@ -613,13 +666,55 @@
   }])
   .controller('LessonBrowserController', ['$scope', '$mdDialog', 'LessonService', function($scope, $mdDialog, LessonService) {
     $scope.lessons = [];
-    
-    LessonService.getAvailableLessons().then(function(lessons) {
-      $scope.lessons = lessons;
-    });
 
+    // Load all available lessons
+    function loadLessons() {
+      LessonService.getAvailableLessons().then(function(lessons) {
+        $scope.lessons = lessons;
+      });
+    }
+
+    // Initial load
+    loadLessons();
+
+    // Select a lesson to start
     $scope.selectLesson = function(lesson) {
       $mdDialog.hide(lesson);
+    };
+
+    // Create a new lesson
+    $scope.createNewLesson = function() {
+      $mdDialog.show({
+        controller: 'LessonEditorController',
+        templateUrl: 'lesson-editor.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: false,
+        fullscreen: true
+      }).then(function(lesson) {
+        // Reload lessons after creating a new one
+        loadLessons();
+      });
+    };
+
+    // Edit an existing lesson
+    $scope.editLesson = function(lesson) {
+      var editorScope = $scope.$new();
+
+      $mdDialog.show({
+        controller: 'LessonEditorController',
+        templateUrl: 'lesson-editor.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: false,
+        fullscreen: true,
+        scope: editorScope,
+        onComplete: function() {
+          // Initialize the editor with the selected lesson
+          editorScope.initWithLesson(lesson.ID);
+        }
+      }).then(function(updatedLesson) {
+        // Reload lessons after editing
+        loadLessons();
+      });
     };
 
     $scope.cancel = function() {
@@ -683,9 +778,43 @@
 	  }
     }
   })
+  .service("ThemeService", function() {
+    return {
+      getTheme: getTheme,
+      setTheme: setTheme,
+    };
+
+    function getTheme() {
+      var theme = localStorage.getItem("settings.theme");
+      if (theme == null)
+        return "dark";
+      return theme;
+    }
+
+    function setTheme(theme) {
+      if (theme === null)
+        localStorage.removeItem("settings.theme");
+      else
+        localStorage.setItem("settings.theme", theme);
+
+      // Apply theme to document
+      var htmlElement = document.documentElement;
+      if (theme === "light") {
+        htmlElement.classList.remove("dark-theme");
+        htmlElement.classList.add("light-theme");
+      } else {
+        htmlElement.classList.remove("light-theme");
+        htmlElement.classList.add("dark-theme");
+      }
+    }
+  })
+  .run(function(ThemeService) {
+    // Initialize theme on app start
+    ThemeService.setTheme(ThemeService.getTheme());
+  })
   .component("settingsDialog", {
     templateUrl : "settings-modal.html",
-    controller : function($mdDialog, KeyboardShortcutService, $rootScope, InstanceService, TerminalService) {
+    controller : function($mdDialog, KeyboardShortcutService, $rootScope, InstanceService, TerminalService, ThemeService) {
       var $ctrl = this;
       $ctrl.$onInit = function() {
         $ctrl.keyboardShortcutPresets = KeyboardShortcutService.getAvailablePresets();
@@ -693,6 +822,7 @@
         $ctrl.instanceImages = InstanceService.getAvailableImages();
         $ctrl.selectedInstanceImage = InstanceService.getDesiredImage();
         $ctrl.terminalFontSizes = TerminalService.getFontSizes();
+        $ctrl.currentTheme = ThemeService.getTheme();
       };
 
       $ctrl.currentShortcutConfig = function(value) {
@@ -719,6 +849,16 @@
         }
 
         return TerminalService.getFontSize();
+      }
+
+      $ctrl.currentTheme = function(value) {
+        if (value !== undefined) {
+          // set theme
+          ThemeService.setTheme(value);
+          return;
+        }
+
+        return ThemeService.getTheme();
       }
 
       $ctrl.close = function() {

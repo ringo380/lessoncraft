@@ -11,21 +11,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"lessoncraft/config"
-	"lessoncraft/docker"
-	"lessoncraft/event"
-	"lessoncraft/handlers"
-	"lessoncraft/id"
-	"lessoncraft/k8s"
-	"lessoncraft/provisioner"
-	"lessoncraft/pwd"
-	"lessoncraft/pwd/types"
-	"lessoncraft/scheduler"
-	"lessoncraft/scheduler/task"
-	"lessoncraft/storage"
+	"github.com/ringo380/lessoncraft/config"
+	"github.com/ringo380/lessoncraft/docker"
+	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/handlers"
+	"github.com/ringo380/lessoncraft/id"
+	"github.com/ringo380/lessoncraft/k8s"
+	"github.com/ringo380/lessoncraft/provisioner"
+	"github.com/ringo380/lessoncraft/pwd"
+	"github.com/ringo380/lessoncraft/pwd/types"
+	"github.com/ringo380/lessoncraft/scheduler"
+	"github.com/ringo380/lessoncraft/scheduler/task"
+	"github.com/ringo380/lessoncraft/storage"
 
-	"lessoncraft/api"
-	"lessoncraft/api/store"
+	"github.com/ringo380/lessoncraft/api"
+	"github.com/ringo380/lessoncraft/api/store"
 )
 
 func main() {
@@ -44,12 +44,16 @@ func main() {
 	if err != nil {
 		log.Fatal("Error connecting to MongoDB: ", err)
 	}
-	defer client.Disconnect(ctx)
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			log.Fatal("Error disconnecting from MongoDB: ", err)
+		}
+	}()
 
 	db := client.Database("lessoncraft")
 	lessonStore := store.NewMongoLessonStore(db)
 
-	// Initialize core PWD components
+	// Initialize core LessonCraft components
 	e := initEvent()
 	s := initStorage()
 	df := initDockerFactory(s)
@@ -58,7 +62,7 @@ func main() {
 	ipf := provisioner.NewInstanceProvisionerFactory(provisioner.NewWindowsASG(df, s), provisioner.NewDinD(id.XIDGenerator{}, df, s))
 	sp := provisioner.NewOverlaySessionProvisioner(df)
 
-	core := pwd.NewPWD(df, e, s, sp, ipf)
+	core := pwd.NewLessonCraft(df, e, s, sp, ipf) // Using the new function name as per the TODO
 
 	tasks := []scheduler.Task{
 		task.NewCheckPorts(e, df),
@@ -98,7 +102,7 @@ func main() {
 	apiHandler := api.NewApiHandler(lessonStore)
 	apiHandler.RegisterRoutes(router)
 
-	// Bootstrap PWD handlers
+	// Bootstrap LessonCraft handlers
 	handlers.Bootstrap(core, e)
 	handlers.Register(router)
 

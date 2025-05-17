@@ -28,6 +28,7 @@ import (
 	"github.com/ringo380/lessoncraft/pwd"
 	"github.com/ringo380/lessoncraft/pwd/types"
 	"github.com/urfave/negroni"
+	oauth2Facebook "golang.org/x/oauth2/facebook"
 	oauth2Github "golang.org/x/oauth2/github"
 	oauth2Google "golang.org/x/oauth2/google"
 	"google.golang.org/api/people/v1"
@@ -45,7 +46,7 @@ var embeddedFiles embed.FS
 var staticFiles fs.FS
 
 var latencyHistogramVec = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	Name:    "pwd_handlers_duration_ms",
+	Name:    "lessoncraft_handlers_duration_ms",
 	Help:    "How long it took to process a specific handler, in a specific host",
 	Buckets: []float64{300, 1200, 5000},
 }, []string{"action"})
@@ -268,6 +269,16 @@ func initOauthProviders(p *types.Playground) {
 		}
 
 		config.Providers[p.Id]["google"] = conf
+	}
+	if p.FacebookClientID != "" && p.FacebookClientSecret != "" {
+		conf := &oauth2.Config{
+			ClientID:     p.FacebookClientID,
+			ClientSecret: p.FacebookClientSecret,
+			Scopes:       []string{"email", "public_profile"},
+			Endpoint:     oauth2Facebook.Endpoint,
+		}
+
+		config.Providers[p.Id]["facebook"] = conf
 	}
 	if p.DockerClientID != "" && p.DockerClientSecret != "" {
 
