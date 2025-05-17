@@ -1,0 +1,86 @@
+:root.light-theme {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e0e0e0;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --accent-primary: #2196F3;
+    --accent-secondary: #1976D2;
+    --border-color: #e0e0e0;
+    --success-color: #4CAF50;
+    --warning-color: #FFC107;
+    --error-color: #F44336;
+    --focus-ring: 0 0 0 3px rgba(33, 150, 243, 0.4);
+}
+
+/* Terminal specific overrides for light theme */
+:root.light-theme .terminal-container {
+    background-color: #1a1a1a; /* Keep terminal background dark for readability */
+    border-color: #e0e0e0;
+}
+
+:root.light-theme .xterm .xterm-viewport {
+    background-color: #1a1a1a;
+}
+
+:root.light-theme .lesson-commands code {
+    background-color: #f0f0f0;
+    color: #0277BD;
+}
+
+:root.light-theme md-sidenav {
+    background-color: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color);
+}
+
+:root.light-theme md-toolbar {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+:root.light-theme md-card {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+:root.light-theme .md-subhead {
+    color: var(--text-secondary) !important;
+}
+
+:root.light-theme ::selection {
+    background-color: rgba(33, 150, 243, 0.3);
+    color: var(--text-primary);
+}
+
+:root.light-theme .md-button.md-primary {
+    color: var(--accent-primary) !important;
+}
+
+:root.light-theme md-dialog {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+:root.light-theme ::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+:root.light-theme ::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+}
+
+:root.light-theme .disconnected {
+    background-color: #FFF8E1;
+    color: #FF6F00;
+}
+
+/* High contrast mode support for light theme */
+@media (forced-colors: active) {
+    :root.light-theme .terminal-container {
+        border: 2px solid CanvasText;
+    }
+
+    :root.light-theme .terminal-container:focus-within {
+        border-color: Highlight;
+    }
+}

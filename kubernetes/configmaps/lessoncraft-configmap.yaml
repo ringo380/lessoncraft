@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lessoncraft-config
+data:
+  mongodb-uri: "mongodb://mongodb:27017/lessoncraft"
+  playground-domain: "lessoncraft.example.com"
+  default-dind-image: "franela/dind"
+  available-dind-images: "franela/dind"
+  allow-windows-instances: "false"
+  default-session-duration: "4h"
+  max-load-avg: "100"
+  lessoncraft-port: "3000"
+  lessoncraft-unsafe: "false"

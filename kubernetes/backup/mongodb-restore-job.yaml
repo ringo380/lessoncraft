@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-restore
+  # This job is meant to be created manually when a restore is needed
+  # kubectl create -f mongodb-restore-job.yaml -n lessoncraft
+spec:
+  template:
+    spec:
+      containers:
+      - name: mongodb-restore
+        image: mongo:6.0
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # This script restores MongoDB from the most recent backup
+          # To restore from a specific backup, modify the BACKUP_FILE environment variable
+          
+          # List available backups
+          echo "Available backups:"
+          ls -la /backup/*.tar.gz
+          
+          # Determine which backup to restore
+          if [ -z "$BACKUP_FILE" ]; then
+            # Use the most recent backup if not specified
+            BACKUP_FILE=$(ls -t /backup/*.tar.gz | head -1)
+            echo "No backup file specified, using most recent: $BACKUP_FILE"
+          else
+            echo "Using specified backup file: $BACKUP_FILE"
+          fi
+          
+          if [ ! -f "$BACKUP_FILE" ]; then
+            echo "Error: Backup file $BACKUP_FILE not found!"
+            exit 1
+          fi
+          
+          # Create a temporary directory for extraction
+          TEMP_DIR=$(mktemp -d)
+          
+          # Extract the backup
+          echo "Extracting backup: $BACKUP_FILE to $TEMP_DIR"
+          tar -xzf $BACKUP_FILE -C $TEMP_DIR
+          
+          # Find the extracted directory
+          DUMP_DIR=$(find $TEMP_DIR -type d -name "lessoncraft-*" | head -1)
+          
+          if [ -z "$DUMP_DIR" ]; then
+            echo "Error: Could not find extracted backup directory!"
+            exit 1
+          fi
+          
+          echo "Extracted backup directory: $DUMP_DIR"
+          
+          # Restore the database
+          echo "Restoring database from $DUMP_DIR/lessoncraft"
+          mongorestore --host=mongodb --db=lessoncraft --drop $DUMP_DIR/lessoncraft
+          
+          # Clean up
+          rm -rf $TEMP_DIR
+          
+          echo "Restore completed successfully!"
+        env:
+        - name: BACKUP_FILE
+          value: ""  # Leave empty to use the most recent backup, or specify a file path
+        volumeMounts:
+        - name: backup-volume
+          mountPath: /backup
+      restartPolicy: Never
+      volumes:
+      - name: backup-volume
+        persistentVolumeClaim:
+          claimName: mongodb-backup-pvc
+  backoffLimit: 4

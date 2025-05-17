@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lessoncraft
+  labels:
+    app: lessoncraft
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lessoncraft
+  template:
+    metadata:
+      labels:
+        app: lessoncraft
+    spec:
+      containers:
+      - name: lessoncraft
+        image: lessoncraft:latest  # Should be replaced with a versioned image in production
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: mongodb-uri
+        - name: PLAYGROUND_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: playground-domain
+        - name: DEFAULT_DIND_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: default-dind-image
+        - name: AVAILABLE_DIND_IMAGES
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: available-dind-images
+        - name: ALLOW_WINDOWS_INSTANCES
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: allow-windows-instances
+        - name: DEFAULT_SESSION_DURATION
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: default-session-duration
+        - name: MAX_LOAD_AVG
+          valueFrom:
+            configMapKeyRef:
+              name: lessoncraft-config
+              key: max-load-avg
+        - name: COOKIE_HASH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: lessoncraft-secrets
+              key: cookie-hash-key
+        - name: COOKIE_BLOCK_KEY
+          valueFrom:
+            secretKeyRef:
+              name: lessoncraft-secrets
+              key: cookie-block-key
+        - name: ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: lessoncraft-secrets
+              key: admin-token
+        resources:
+          limits:
+            cpu: "1.0"
+            memory: "512Mi"
+          requests:
+            cpu: "0.2"
+            memory: "256Mi"
+        volumeMounts:
+        - name: sessions-data
+          mountPath: /lessoncraft/sessions
+        - name: app-data
+          mountPath: /lessoncraft/data
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: sessions-data
+        persistentVolumeClaim:
+          claimName: lessoncraft-sessions-pvc
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: lessoncraft-data-pvc
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001

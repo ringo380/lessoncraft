@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2:00 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongodb-backup
+            image: mongo:6.0
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Set timestamp for backup filename
+              TIMESTAMP=$(date +%Y%m%d%H%M%S)
+              
+              # Create backup directory
+              mkdir -p /backup
+              
+              # Perform MongoDB dump
+              mongodump --host=mongodb --db=lessoncraft --out=/backup/lessoncraft-$TIMESTAMP
+              
+              # Compress the backup
+              tar -czf /backup/lessoncraft-$TIMESTAMP.tar.gz /backup/lessoncraft-$TIMESTAMP
+              
+              # Remove the uncompressed backup
+              rm -rf /backup/lessoncraft-$TIMESTAMP
+              
+              # Keep only the last 7 backups
+              ls -t /backup/*.tar.gz | tail -n +8 | xargs rm -f
+            volumeMounts:
+            - name: backup-volume
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: mongodb-backup-pvc
