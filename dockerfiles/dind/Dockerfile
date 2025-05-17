@@ -48,7 +48,7 @@ COPY ["daemon.json", "/etc/docker/"]
 WORKDIR /root
 
 # Setup certs and ssh keys
-RUN mkdir -p /var/run/pwd/certs && mkdir -p /var/run/pwd/uploads \
+RUN mkdir -p /var/run/lessoncraft/certs && mkdir -p /var/run/lessoncraft/uploads \
     && ssh-keygen -N "" -t ed25519 -f  /etc/ssh/ssh_host_ed25519_key >/dev/null \
     && mkdir ~/.ssh && ssh-keygen -N "" -t ed25519 -f ~/.ssh/id_rsa \
     && cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
@@ -56,7 +56,7 @@ RUN mkdir -p /var/run/pwd/certs && mkdir -p /var/run/pwd/uploads \
 # Remove IPv6 alias for localhost and start docker in the background ...
 CMD cat /etc/hosts >/etc/hosts.bak && \
     sed 's/^::1.*//' /etc/hosts.bak > /etc/hosts && \
-    sed -i "s/\PWD_IP_ADDRESS/$PWD_IP_ADDRESS/" /etc/docker/daemon.json && \
+    sed -i "s/\LESSONCRAFT_IP_ADDRESS/$LESSONCRAFT_IP_ADDRESS/" /etc/docker/daemon.json && \
     sed -i "s/\DOCKER_TLSENABLE/$DOCKER_TLSENABLE/" /etc/docker/daemon.json && \
     sed -i "s/\DOCKER_TLSCACERT/$DOCKER_TLSCACERT/" /etc/docker/daemon.json && \
     sed -i "s/\DOCKER_TLSCERT/$DOCKER_TLSCERT/" /etc/docker/daemon.json && \

@@ -22,6 +22,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/ringo380/lessoncraft/config"
+	"github.com/ringo380/lessoncraft/internal/circuitbreaker"
 )
 
 const (
@@ -266,25 +267,30 @@ type CreateContainerOpts struct {
 	Networks       []string
 	DindVolumeSize string
 	Envs           []string
+
+	// Resource limits
+	MaxProcesses int64  // Maximum number of processes (default: 1000)
+	MaxMemoryMB  int64  // Maximum memory in MB (default: from environment)
+	StorageSize  string // Maximum storage size (default: from environment)
 }
 
 func (d *docker) ContainerCreate(opts CreateContainerOpts) (err error) {
 	// Make sure directories are available for the new instance container
-	containerDir := "/opt/pwd"
+	containerDir := "/opt/lessoncraft"
 	containerCertDir := fmt.Sprintf("%s/certs", containerDir)
 
 	env := append(opts.Envs, fmt.Sprintf("SESSION_ID=%s", opts.SessionId))
 
 	// Write certs to container cert dir
 	if len(opts.ServerCert) > 0 {
-		env = append(env, `DOCKER_TLSCERT=\/opt\/pwd\/certs\/cert.pem`)
+		env = append(env, `DOCKER_TLSCERT=\/opt\/lessoncraft\/certs\/cert.pem`)
 	}
 	if len(opts.ServerKey) > 0 {
-		env = append(env, `DOCKER_TLSKEY=\/opt\/pwd\/certs\/key.pem`)
+		env = append(env, `DOCKER_TLSKEY=\/opt\/lessoncraft\/certs\/key.pem`)
 	}
 	if len(opts.CACert) > 0 {
 		// if ca cert is specified, verify that clients that connects present a certificate signed by the CA
-		env = append(env, `DOCKER_TLSCACERT=\/opt\/pwd\/certs\/ca.pem`)
+		env = append(env, `DOCKER_TLSCACERT=\/opt\/lessoncraft\/certs\/ca.pem`)
 	}
 	if len(opts.ServerCert) > 0 || len(opts.ServerKey) > 0 || len(opts.CACert) > 0 {
 		// if any of the certs is specified, enable TLS
@@ -326,7 +332,7 @@ func (d *docker) ContainerCreate(opts CreateContainerOpts) (err error) {
 	t := true
 	h.Resources.OomKillDisable = &t
 
-	env = append(env, fmt.Sprintf("PWD_HOST_FQDN=%s", opts.HostFQDN))
+	env = append(env, fmt.Sprintf("LESSONCRAFT_HOST_FQDN=%s", opts.HostFQDN))
 	cf := &container.Config{
 		Hostname:     opts.Hostname,
 		Image:        opts.Image,
@@ -366,18 +372,21 @@ func (d *docker) ContainerCreate(opts CreateContainerOpts) (err error) {
 	container, err := d.c.ContainerCreate(context.Background(), cf, h, networkConf, opts.ContainerName)
 
 	if err != nil {
-		//if client.IsErrImageNotFound(err) {
-		//log.Printf("Unable to find image '%s' locally\n", opts.Image)
-		//if err = d.pullImage(context.Background(), opts.Image); err != nil {
-		//return "", err
-		//}
-		//container, err = d.c.ContainerCreate(context.Background(), cf, h, networkConf, opts.ContainerName)
-		//if err != nil {
-		//return "", err
-		//}
-		//} else {
-		return err
-		//}
+		// Check if the error is because the image doesn't exist locally
+		if strings.Contains(err.Error(), "No such image") {
+			log.Printf("Unable to find image '%s' locally, attempting to pull\n", opts.Image)
+			if err = d.pullImage(context.Background(), opts.Image); err != nil {
+				log.Printf("Failed to pull image '%s': %v\n", opts.Image, err)
+				return fmt.Errorf("failed to pull image '%s': %w", opts.Image, err)
+			}
+			// Try to create the container again after pulling the image
+			container, err = d.c.ContainerCreate(context.Background(), cf, h, networkConf, opts.ContainerName)
+			if err != nil {
+				return fmt.Errorf("failed to create container after pulling image: %w", err)
+			}
+		} else {
+			return err
+		}
 	}
 
 	//connect remaining networks if there are any

@@ -1,27 +1,57 @@
-FROM golang:1.9
+FROM golang:1.18-alpine AS builder
 
-# Copy the runtime dockerfile into the context as Dockerfile
-COPY . /go/src/github.com/play-with-docker/play-with-docker
+# Install necessary build dependencies
+RUN apk --no-cache add ca-certificates git openssh-client
 
-WORKDIR /go/src/github.com/play-with-docker/play-with-docker
+# Create a non-root user for building
+RUN adduser -D -u 10001 lessonuser
+
+# Copy only necessary files for building
+COPY go.mod go.sum /go/src/lessoncraft/
+WORKDIR /go/src/lessoncraft
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the source code
+COPY . /go/src/lessoncraft/
+
+# Generate SSH key with proper permissions
+RUN ssh-keygen -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key >/dev/null && \
+    chmod 600 /etc/ssh/ssh_host_rsa_key
+
+WORKDIR /go/src/lessoncraft/router/l2
+
+# Build the application with security flags
+RUN CGO_ENABLED=0 go build -a -installsuffix nocgo -ldflags="-w -s" -o /go/bin/lessoncraft-l2 .
 
 
-RUN ssh-keygen -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key >/dev/null
+FROM alpine:3.18
 
-WORKDIR /go/src/github.com/ringo380/lessoncraft/router/l2
+# Add CA certificates and create necessary directories
+RUN apk --no-cache add ca-certificates wget && \
+    mkdir -p /app && \
+    adduser -D -u 10001 lessonuser && \
+    chown -R lessonuser:lessonuser /app
 
-RUN CGO_ENABLED=0 go build -a -installsuffix nocgo -o /go/bin/play-with-docker-l2 .
+# Copy the binary and SSH key from the builder stage
+COPY --from=builder /go/bin/lessoncraft-l2 /app/lessoncraft-l2
+COPY --from=builder /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key
 
+# Set proper permissions
+RUN chmod 600 /etc/ssh/ssh_host_rsa_key && \
+    chown lessonuser:lessonuser /etc/ssh/ssh_host_rsa_key && \
+    chmod 755 /app/lessoncraft-l2
 
-FROM alpine
+# Switch to non-root user for most operations
+# Note: Some ports (22, 53) require root privileges, so we can't use USER directive here
+# Instead, we'll use gosu or similar in the entrypoint to drop privileges when possible
 
-RUN apk --update add ca-certificates
-RUN mkdir /app
-
-COPY --from=0 /go/bin/play-with-docker-l2 /app/play-with-docker-l2
-COPY --from=0 /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget -q --spider http://localhost:8080/health || exit 1
 
 WORKDIR /app
-CMD ["./play-with-docker-l2", "-ssh_key_path", "/etc/ssh/ssh_host_rsa_key"]
+CMD ["./lessoncraft-l2", "-ssh_key_path", "/etc/ssh/ssh_host_rsa_key"]
 
 EXPOSE 22 53 443 8080

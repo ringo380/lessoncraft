@@ -8,7 +8,7 @@ import (
 	"github.com/ringo380/lessoncraft/pwd/types"
 )
 
-func (p *pwd) ClientNew(id string, session *types.Session) *types.Client {
+func (p *lessoncraft) ClientNew(id string, session *types.Session) *types.Client {
 	defer observeAction("ClientNew", time.Now())
 	c := &types.Client{Id: id, SessionId: session.Id}
 	if err := p.storage.ClientPut(c); err != nil {
@@ -17,7 +17,7 @@ func (p *pwd) ClientNew(id string, session *types.Session) *types.Client {
 	return c
 }
 
-func (p *pwd) ClientResizeViewPort(c *types.Client, cols, rows uint) {
+func (p *lessoncraft) ClientResizeViewPort(c *types.Client, cols, rows uint) {
 	defer observeAction("ClientResizeViewPort", time.Now())
 	c.ViewPort.Rows = rows
 	c.ViewPort.Cols = cols
@@ -29,7 +29,7 @@ func (p *pwd) ClientResizeViewPort(c *types.Client, cols, rows uint) {
 	p.notifyClientSmallestViewPort(c.SessionId)
 }
 
-func (p *pwd) ClientClose(client *types.Client) {
+func (p *lessoncraft) ClientClose(client *types.Client) {
 	defer observeAction("ClientClose", time.Now())
 	// Client has disconnected. Remove from session and recheck terminal sizes.
 	if err := p.storage.ClientDelete(client.Id); err != nil {
@@ -39,7 +39,7 @@ func (p *pwd) ClientClose(client *types.Client) {
 	p.notifyClientSmallestViewPort(client.SessionId)
 }
 
-func (p *pwd) ClientCount() int {
+func (p *lessoncraft) ClientCount() int {
 	count, err := p.storage.ClientCount()
 	if err != nil {
 		log.Println("Error counting clients", err)
@@ -48,7 +48,7 @@ func (p *pwd) ClientCount() int {
 	return count
 }
 
-func (p *pwd) notifyClientSmallestViewPort(sessionId string) {
+func (p *lessoncraft) notifyClientSmallestViewPort(sessionId string) {
 	instances, err := p.storage.InstanceFindBySessionId(sessionId)
 	if err != nil {
 		log.Printf("Error finding instances for session [%s]. Got: %v\n", sessionId, err)

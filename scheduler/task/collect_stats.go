@@ -15,6 +15,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/ringo380/lessoncraft/docker"
 	"github.com/ringo380/lessoncraft/event"
+	"github.com/ringo380/lessoncraft/internal/circuitbreaker"
 	"github.com/ringo380/lessoncraft/pwd/types"
 	"github.com/ringo380/lessoncraft/router"
 	"github.com/ringo380/lessoncraft/storage"
@@ -50,23 +51,55 @@ func (t *collectStats) Run(ctx context.Context, instance *types.Instance) error 
 		req, err := http.NewRequest("GET", fmt.Sprintf("http://%s/stats", host), nil)
 		if err != nil {
 			log.Printf("Could not create request to get stats of windows instance with IP %s. Got: %v\n", instance.IP, err)
-			return fmt.Errorf("Could not create request to get stats of windows instance with IP %s. Got: %v\n", instance.IP, err)
+			// Return a degraded response with default stats
+			stats := InstanceStats{
+				Instance: instance.Name,
+				Mem:      "N/A (stats collection failed)",
+				Cpu:      "N/A (stats collection failed)",
+			}
+			t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+			return fmt.Errorf("Could not create request to get stats of windows instance with IP %s, using default stats: %v", instance.IP, err)
 		}
 		req.Header.Set("X-Proxy-Host", instance.SessionHost)
 		resp, err := t.cli.Do(req)
 		if err != nil {
 			log.Printf("Could not get stats of windows instance with IP %s. Got: %v\n", instance.IP, err)
-			return fmt.Errorf("Could not get stats of windows instance with IP %s. Got: %v\n", instance.IP, err)
+			// Check if this is a circuit breaker error
+			if err.Error() == "circuit breaker is open: circuit breaker is open" {
+				log.Printf("Stats collector circuit breaker is open for instance %s, using default stats", instance.Name)
+			}
+			// Return a degraded response with default stats
+			stats := InstanceStats{
+				Instance: instance.Name,
+				Mem:      "N/A (stats collection failed)",
+				Cpu:      "N/A (stats collection failed)",
+			}
+			t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+			return fmt.Errorf("Could not get stats of windows instance with IP %s, using default stats: %v", instance.IP, err)
 		}
 		if resp.StatusCode != 200 {
 			log.Printf("Could not get stats of windows instance with IP %s. Got status code: %d\n", instance.IP, resp.StatusCode)
-			return fmt.Errorf("Could not get stats of windows instance with IP %s. Got status code: %d\n", instance.IP, resp.StatusCode)
+			// Return a degraded response with default stats
+			stats := InstanceStats{
+				Instance: instance.Name,
+				Mem:      "N/A (stats collection failed)",
+				Cpu:      "N/A (stats collection failed)",
+			}
+			t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+			return fmt.Errorf("Could not get stats of windows instance with IP %s, using default stats: status code %d", instance.IP, resp.StatusCode)
 		}
 		var info map[string]float64
 		err = json.NewDecoder(resp.Body).Decode(&info)
 		if err != nil {
 			log.Printf("Could not get stats of windows instance with IP %s. Got: %v\n", instance.IP, err)
-			return fmt.Errorf("Could not get stats of windows instance with IP %s. Got: %v\n", instance.IP, err)
+			// Return a degraded response with default stats
+			stats := InstanceStats{
+				Instance: instance.Name,
+				Mem:      "N/A (stats collection failed)",
+				Cpu:      "N/A (stats collection failed)",
+			}
+			t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+			return fmt.Errorf("Could not decode stats of windows instance with IP %s, using default stats: %v", instance.IP, err)
 		}
 		stats := InstanceStats{Instance: instance.Name}
 
@@ -79,7 +112,15 @@ func (t *collectStats) Run(ctx context.Context, instance *types.Instance) error 
 	if sess, found := t.cache.Get(instance.SessionId); !found {
 		s, err := t.storage.SessionGet(instance.SessionId)
 		if err != nil {
-			return err
+			log.Printf("Failed to get session %s: %v", instance.SessionId, err)
+			// Return a degraded response with default stats
+			stats := InstanceStats{
+				Instance: instance.Name,
+				Mem:      "N/A (stats collection failed)",
+				Cpu:      "N/A (stats collection failed)",
+			}
+			t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+			return fmt.Errorf("Failed to get session for stats collection, using default stats: %v", err)
 		}
 		t.cache.Add(s.Id, s)
 		session = s
@@ -88,20 +129,45 @@ func (t *collectStats) Run(ctx context.Context, instance *types.Instance) error 
 	}
 	dockerClient, err := t.factory.GetForSession(session)
 	if err != nil {
-		log.Println(err)
-		return err
+		log.Printf("Failed to get Docker client for session %s: %v", session.Id, err)
+		// Check if this is a circuit breaker error
+		if err.Error() == "Docker daemon circuit breaker is open, too many failures detected" {
+			log.Printf("Docker daemon circuit breaker is open for session %s, using default stats", session.Id)
+		}
+		// Return a degraded response with default stats
+		stats := InstanceStats{
+			Instance: instance.Name,
+			Mem:      "N/A (stats collection failed)",
+			Cpu:      "N/A (stats collection failed)",
+		}
+		t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+		return fmt.Errorf("Failed to get Docker client for stats collection, using default stats: %v", err)
 	}
 	reader, err := dockerClient.ContainerStats(instance.Name)
 	if err != nil {
-		log.Println("Error while trying to collect instance stats", err)
-		return err
+		log.Printf("Error while trying to collect instance stats for %s: %v", instance.Name, err)
+		// Return a degraded response with default stats
+		stats := InstanceStats{
+			Instance: instance.Name,
+			Mem:      "N/A (stats collection failed)",
+			Cpu:      "N/A (stats collection failed)",
+		}
+		t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+		return fmt.Errorf("Failed to collect container stats, using default stats: %v", err)
 	}
 	dec := json.NewDecoder(reader)
 	var v *dockerTypes.StatsJSON
 	e := dec.Decode(&v)
 	if e != nil {
-		log.Println("Error while trying to collect instance stats", e)
-		return err
+		log.Printf("Error while trying to decode instance stats for %s: %v", instance.Name, e)
+		// Return a degraded response with default stats
+		stats := InstanceStats{
+			Instance: instance.Name,
+			Mem:      "N/A (stats collection failed)",
+			Cpu:      "N/A (stats collection failed)",
+		}
+		t.event.Emit(CollectStatsEvent, instance.SessionId, stats)
+		return fmt.Errorf("Failed to decode container stats, using default stats: %v", e)
 	}
 	stats := InstanceStats{Instance: instance.Name}
 	// Memory
@@ -143,8 +209,20 @@ func NewCollectStats(e event.EventApi, f docker.FactoryApi, s storage.StorageApi
 		MaxIdleConnsPerHost: 5,
 		Proxy:               proxyHost,
 	}
+
+	// Wrap the transport with a circuit breaker
+	cbTransport := circuitbreaker.WrapTransport(transport, circuitbreaker.Options{
+		Name:                     "stats-collector",
+		FailureThreshold:         3,
+		ResetTimeout:             10 * time.Second,
+		HalfOpenSuccessThreshold: 1,
+		OnStateChange: func(name string, from, to circuitbreaker.State) {
+			log.Printf("Stats collector circuit breaker state changed from %v to %v", from, to)
+		},
+	})
+
 	cli := &http.Client{
-		Transport: transport,
+		Transport: cbTransport,
 	}
 	c, _ := lru.New(5000)
 	return &collectStats{event: e, factory: f, cli: cli, cache: c, storage: s}

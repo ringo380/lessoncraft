@@ -53,7 +53,7 @@ func ParseFlags() {
 	flag.BoolVar(&ForceTLS, "tls", false, "Use TLS to connect to docker daemons")
 	flag.StringVar(&PortNumber, "port", "3000", "Port number")
 	flag.StringVar(&SessionsFile, "save", "./pwd/sessions", "Tell where to store sessions file")
-	flag.StringVar(&PWDContainerName, "name", "pwd", "Container name used to run PWD (used to be able to connect it to the networks it creates)")
+	flag.StringVar(&PWDContainerName, "name", "lessoncraft", "Container name used to run LessonCraft (used to be able to connect it to the networks it creates)")
 	flag.StringVar(&L2ContainerName, "l2", "l2", "Container name used to run L2 Router")
 	flag.StringVar(&L2RouterIP, "l2-ip", "", "Host IP address for L2 router ping response")
 	flag.StringVar(&L2Subdomain, "l2-subdomain", "direct", "Subdomain to the L2 Router")
@@ -70,7 +70,7 @@ func ParseFlags() {
 
 	flag.StringVar(&SegmentId, "segment-id", "", "Segment id to post metrics")
 
-	flag.BoolVar(&Unsafe, "unsafe", os.Getenv("PWD_UNSAFE") == "true", "Operate in unsafe mode")
+	flag.BoolVar(&Unsafe, "unsafe", os.Getenv("LESSONCRAFT_UNSAFE") == "true", "Operate in unsafe mode")
 
 	flag.Parse()
 

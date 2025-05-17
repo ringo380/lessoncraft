@@ -1,42 +1,142 @@
 version: '3.2'
 services:
     haproxy:
-        container_name: haproxy
-        image: haproxy
+        container_name: ${HAPROXY_CONTAINER_NAME:-haproxy}
+        image: ${HAPROXY_IMAGE:-haproxy:2.8-alpine}
         ports:
-            - "80:8080"
+            - "${HOST_PORT:-80}:8080"
         volumes:
-            - ./haproxy:/usr/local/etc/haproxy
+            - ./haproxy:/usr/local/etc/haproxy:ro
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+            interval: ${HEALTHCHECK_INTERVAL:-30s}
+            timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+            retries: ${HEALTHCHECK_RETRIES:-3}
+        security_opt:
+            - no-new-privileges:true
+        read_only: true
+        tmpfs:
+            - /tmp
+        logging:
+            driver: "${LOG_DRIVER:-json-file}"
+            options:
+                max-size: "${LOG_MAX_SIZE:-10m}"
+                max-file: "${LOG_MAX_FILES:-3}"
+        deploy:
+            resources:
+                limits:
+                    memory: 256M
+                    cpus: 0.5
+                reservations:
+                    memory: 128M
+                    cpus: 0.1
 
     lessoncraft:
         # Main application container
-        container_name: lessoncraft
-        # use the latest golang image
-        image: golang
-        # go to the right place and starts the app
-        command: /bin/sh -c 'ssh-keygen -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key >/dev/null; cd /go/src/; if [ -e /runbin/lessoncraft ]; then /runbin/lessoncraft -save /lessoncraft/sessions -name l2; else go run api.go -save /lessoncraft/sessions -name l2; fi'
+        container_name: ${LESSONCRAFT_CONTAINER_NAME:-lessoncraft}
+        build:
+            context: .
+            dockerfile: Dockerfile
         environment:
-          - APPARMOR_PROFILE=docker-dind
+            - APPARMOR_PROFILE=${APPARMOR_PROFILE:-docker-dind}
+            - DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
+            - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
+            - LESSONCRAFT_UNSAFE=${LESSONCRAFT_UNSAFE:-false}
+            - PORT=${LESSONCRAFT_PORT:-8080}
+            - PLAYGROUND_DOMAIN=${PLAYGROUND_DOMAIN:-localhost}
+            - DEFAULT_DIND_IMAGE=${DEFAULT_DIND_IMAGE:-franela/dind}
+            - AVAILABLE_DIND_IMAGES=${AVAILABLE_DIND_IMAGES:-franela/dind}
+            - ALLOW_WINDOWS_INSTANCES=${ALLOW_WINDOWS_INSTANCES:-false}
+            - DEFAULT_SESSION_DURATION=${DEFAULT_SESSION_DURATION:-4h}
+            - LOGIN_REDIRECT=${LOGIN_REDIRECT:-http://localhost:3000}
+            - COOKIE_HASH_KEY=${COOKIE_HASH_KEY:-}
+            - COOKIE_BLOCK_KEY=${COOKIE_BLOCK_KEY:-}
+            - ADMIN_TOKEN=${ADMIN_TOKEN:-}
+            - SEGMENT_ID=${SEGMENT_ID:-}
+            - MAX_LOAD_AVG=${MAX_LOAD_AVG:-100}
         volumes:
             # since this app creates networks and launches containers, we need to talk to docker daemon
-            - /var/run/docker.sock:/var/run/docker.sock
+            # but we mount it read-only where possible
+            - /var/run/docker.sock:/var/run/docker.sock:ro
             # mount the box mounted shared folder to the container
-            - $PWD:/go/src
-            - sessions:/lessoncraft
+            - ${SOURCE_CODE_PATH:-$PWD}:/go/src:ro
+            - ${SESSIONS_VOLUME:-sessions}:/lessoncraft/sessions
+            - ${DATA_VOLUME:-data}:/lessoncraft/data
+        restart: unless-stopped
+        depends_on:
+            - ${MONGODB_SERVICE:-mongodb}
+        security_opt:
+            - no-new-privileges:true
+            - apparmor=${APPARMOR_PROFILE:-docker-dind}
+        logging:
+            driver: "${LOG_DRIVER:-json-file}"
+            options:
+                max-size: "${LOG_MAX_SIZE:-10m}"
+                max-file: "${LOG_MAX_FILES:-3}"
+        deploy:
+            resources:
+                limits:
+                    memory: 512M
+                    cpus: 1.0
+                reservations:
+                    memory: 256M
+                    cpus: 0.2
+
     l2:
-        container_name: l2
-        # use the latest golang image
-        image: golang
-        # go to the right place and starts the app
-        command: /bin/sh -c 'ssh-keygen -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key >/dev/null; cd /go/src/router/l2; if [ -e /runbin/l2 ]; then /runbin/l2 -ssh_key_path /etc/ssh/ssh_host_rsa_key -name l2 -save /pwd/networks; else go run l2.go -ssh_key_path /etc/ssh/ssh_host_rsa_key -name l2 -save /pwd/networks; fi'
+        container_name: ${L2_CONTAINER_NAME:-l2}
+        build:
+            context: .
+            dockerfile: Dockerfile.l2
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-            - $PWD:/go/src
-            - networks:/lessoncraft
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ${SOURCE_CODE_PATH:-$PWD}:/go/src:ro
+            - ${NETWORKS_VOLUME:-networks}:/lessoncraft
         ports:
-            - "8022:22"
-            - "8053:53"
-            - "443:443"
+            - "${SSH_PORT:-8022}:22"
+            - "${DNS_PORT:-8053}:53"
+            - "${TLS_PORT:-443}:443"
+        restart: unless-stopped
+        security_opt:
+            - no-new-privileges:true
+        logging:
+            driver: "${LOG_DRIVER:-json-file}"
+            options:
+                max-size: "${LOG_MAX_SIZE:-10m}"
+                max-file: "${LOG_MAX_FILES:-3}"
+        deploy:
+            resources:
+                limits:
+                    memory: 512M
+                    cpus: 1.0
+                reservations:
+                    memory: 256M
+                    cpus: 0.2
+
+    mongodb:
+        container_name: ${MONGODB_CONTAINER_NAME:-mongodb}
+        image: ${MONGODB_IMAGE:-mongo:6.0}
+        volumes:
+            - ${MONGODB_DATA_VOLUME:-mongodb_data}:/data/db
+        restart: unless-stopped
+        environment:
+            - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-lessoncraft}
+        logging:
+            driver: "${LOG_DRIVER:-json-file}"
+            options:
+                max-size: "${LOG_MAX_SIZE:-10m}"
+                max-file: "${LOG_MAX_FILES:-3}"
+        deploy:
+            resources:
+                limits:
+                    memory: 512M
+                    cpus: 0.5
+                reservations:
+                    memory: 256M
+                    cpus: 0.1
+
 volumes:
     sessions:
     networks:
+    data:
+    mongodb_data:

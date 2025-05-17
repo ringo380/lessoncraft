@@ -1,0 +1,119 @@
+name: Docker Security Scan
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'Dockerfile.l2'
+      - 'dockerfiles/**'
+      - 'docker-compose.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'Dockerfile.l2'
+      - 'dockerfiles/**'
+      - 'docker-compose.yml'
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+
+jobs:
+  scan-main-image:
+    name: Scan Main LessonCraft Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and export
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: lessoncraft:latest
+          outputs: type=docker,dest=/tmp/lessoncraft.tar
+
+      - name: Docker Scout Scan
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: lessoncraft:latest
+          only-fixed: true
+          exit-once: critical
+          sarif-file: lessoncraft-scan-results.sarif
+
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: lessoncraft-scan-results.sarif
+          category: docker-scout-lessoncraft
+
+  scan-l2-image:
+    name: Scan L2 Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and export
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.l2
+          tags: lessoncraft-l2:latest
+          outputs: type=docker,dest=/tmp/lessoncraft-l2.tar
+
+      - name: Docker Scout Scan
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: lessoncraft-l2:latest
+          only-fixed: true
+          exit-once: critical
+          sarif-file: lessoncraft-l2-scan-results.sarif
+
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: lessoncraft-l2-scan-results.sarif
+          category: docker-scout-l2
+
+  scan-dind-image:
+    name: Scan DinD Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and export
+        uses: docker/build-push-action@v4
+        with:
+          context: ./dockerfiles/dind
+          file: ./dockerfiles/dind/Dockerfile
+          tags: lessoncraft-dind:latest
+          outputs: type=docker,dest=/tmp/lessoncraft-dind.tar
+
+      - name: Docker Scout Scan
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: lessoncraft-dind:latest
+          only-fixed: true
+          exit-once: critical
+          sarif-file: lessoncraft-dind-scan-results.sarif
+
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: lessoncraft-dind-scan-results.sarif
+          category: docker-scout-dind
