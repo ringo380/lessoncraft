@@ -1,0 +1,188 @@
+/* Enhanced responsive design for LessonCraft */
+
+/* Base mobile-first styles */
+.terminal-container {
+    height: 60vh;
+    transition: height 0.3s var(--ease-spring);
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.terminal-instance {
+    width: 100%;
+    height: 100%;
+}
+
+/* Terminal enhancements */
+.terminal-toolbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 0 0 0 8px;
+    padding: 4px;
+    z-index: 10;
+    display: flex;
+    opacity: 0.2;
+    transition: opacity 0.2s ease;
+}
+
+.terminal-toolbar:hover {
+    opacity: 1;
+}
+
+.terminal-toolbar button {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
+.terminal-toolbar button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.terminal-toolbar button:focus {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* Improved terminal focus state */
+.terminal-container:focus-within {
+    box-shadow: 0 0 0 2px var(--accent-primary), var(--shadow-2);
+}
+
+/* Improved terminal scrollbar */
+.xterm .xterm-viewport::-webkit-scrollbar {
+    width: 8px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive layout improvements */
+@media (max-width: 600px) {
+    md-sidenav.md-locked-open {
+        width: 200px;
+        min-width: 200px;
+        max-width: 200px;
+    }
+    
+    .md-toolbar-tools h1 {
+        font-size: 18px;
+    }
+    
+    md-list-item .md-list-item-text h3 {
+        font-size: 14px;
+    }
+    
+    md-list-item .md-list-item-text h4 {
+        font-size: 12px;
+    }
+    
+    .terminal-container {
+        height: 50vh;
+    }
+    
+    md-card-content {
+        padding: 8px;
+    }
+    
+    .lesson-content {
+        font-size: 14px;
+    }
+    
+    .lesson-commands code {
+        font-size: 12px;
+        padding: 8px;
+    }
+}
+
+/* Tablet improvements */
+@media (min-width: 601px) and (max-width: 960px) {
+    .terminal-container {
+        height: 55vh;
+    }
+    
+    md-card-content {
+        padding: 12px;
+    }
+}
+
+/* Desktop improvements */
+@media (min-width: 961px) {
+    .terminal-container {
+        height: 65vh;
+    }
+    
+    .terminal-container.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1000;
+        border-radius: 0;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+    .terminal-toolbar {
+        opacity: 0.8;
+    }
+    
+    md-button {
+        min-height: 48px;
+    }
+    
+    .lesson-commands code {
+        padding: 12px;
+        margin: 8px 0;
+    }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+    .terminal-container {
+        border: 2px solid CanvasText;
+    }
+    
+    .terminal-container:focus-within {
+        border-color: Highlight;
+    }
+    
+    .terminal-toolbar button {
+        border: 1px solid ButtonText;
+    }
+}
+
+/* Landscape mode for mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .terminal-container {
+        height: 80vh;
+    }
+    
+    md-toolbar {
+        min-height: 48px;
+    }
+    
+    .md-toolbar-tools {
+        height: 48px;
+    }
+}
