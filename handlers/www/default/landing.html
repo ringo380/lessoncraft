@@ -16,6 +16,77 @@
 
     <!-- Custom styles for this template -->
     <link href="/assets/landing.css" rel="stylesheet">
+    <style>
+      /* Provider button styles */
+      .provider-btn {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 220px;
+      }
+      .provider-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+      }
+      .provider-btn i {
+        margin-right: 10px;
+        font-size: 20px;
+      }
+      .github-btn {
+        background-color: #24292e;
+      }
+      .google-btn {
+        background-color: #4285F4;
+      }
+      .facebook-btn {
+        background-color: #3b5998;
+      }
+      .docker-btn {
+        background-color: #0db7ed;
+      }
+      .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .login-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .login-message {
+        color: white;
+        margin-top: 15px;
+        font-size: 18px;
+      }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   </head>
 
   <body>
@@ -35,14 +106,29 @@
         <img src="https://galaxyproject.github.io/training-material/topics/admin/images/docker_whale.png" />
         <h1 class="display-3">Play with Docker</h1>
         <p class="lead">A simple, interactive and fun playground to learn Docker</p>
-        <div ng-hide="loggedIn" class="btn-group" role="group">
-          <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Login
-          </button>
-          <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-              <a ng-repeat="provider in providers" class="dropdown-item" ng-click="login(provider)">{{provider}}</a>
+
+        <div ng-hide="loggedIn" class="login-container">
+          <!-- Error alert -->
+          <div ng-if="loginError" class="alert alert-danger" style="margin-bottom: 20px; width: 100%; max-width: 400px; text-align: center;">
+            {{loginError}}
+          </div>
+
+          <div ng-repeat="provider in providers" class="provider-btn" 
+               ng-class="{'github-btn': provider === 'github', 'google-btn': provider === 'google', 'facebook-btn': provider === 'facebook', 'docker-btn': provider === 'docker'}"
+               ng-click="login(provider)">
+            <i class="fab" 
+               ng-class="{'fa-github': provider === 'github', 'fa-google': provider === 'google', 'fa-facebook-f': provider === 'facebook', 'fa-docker': provider === 'docker'}"></i>
+            Login with {{provider | capitalize}}
           </div>
         </div>
+
+        <div ng-if="isLoggingIn" class="login-overlay">
+          <div style="text-align: center;">
+            <div class="login-spinner"></div>
+            <div class="login-message">Logging in with {{currentProvider | capitalize}}...</div>
+          </div>
+        </div>
+
         <form id="landingForm" method="POST" action="/">
             <p ng-show="loggedIn"><a class="btn btn-lg btn-success" href="#" ng-click="start()" role="button">Start</a></p>
                 <input id="stack" type="hidden" name="stack" value=""/>
@@ -69,10 +155,19 @@
     <script crossorigin="anonymous" src="https://unpkg.com/bootstrap@4.0.0-beta/dist/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script>
         angular.module('PWDLanding', [])
-            .controller('LoginController', ['$scope', '$http', '$window', function($scope, $http, $window) {
+            .filter('capitalize', function() {
+                return function(input) {
+                    if (!input) return '';
+                    return input.charAt(0).toUpperCase() + input.slice(1);
+                };
+            })
+            .controller('LoginController', ['$scope', '$http', '$window', '$timeout', function($scope, $http, $window, $timeout) {
                 $scope.providers = [];
                 $scope.loggedIn = false;
                 $scope.user = null;
+                $scope.isLoggingIn = false;
+                $scope.currentProvider = '';
+                $scope.loginError = null;
 
                 function checkLoggedIn() {
                     $http({
@@ -81,10 +176,20 @@
                     }).then(function(response) {
                         $scope.user = response.data;
                         $scope.loggedIn = true;
+                        $scope.isLoggingIn = false;
                     }, function(response) {
                         console.log('ERROR', response);
                         $scope.user = null;
                         $scope.loggedIn = false;
+                        $scope.isLoggingIn = false;
+
+                        // Show error message if login failed
+                        if ($scope.currentProvider) {
+                            $scope.loginError = 'Failed to login with ' + $scope.currentProvider + '. Please try again.';
+                            $timeout(function() {
+                                $scope.loginError = null;
+                            }, 5000);
+                        }
                     });
                 }
 
@@ -100,22 +205,51 @@
                     }
                 }, function(response) {
                     console.log('ERROR', response);
+                    $scope.loginError = 'Failed to load login providers. Please refresh the page.';
                 });
 
 
                 $scope.login = function(provider) {
+                    $scope.isLoggingIn = true;
+                    $scope.currentProvider = provider;
+                    $scope.loginError = null;
+
                     var width = screen.width*0.6;
                     // fixed height as the login window is not responsive
                     var height = 620;
                     var x = screen.width/2 - width/2;
                     var y = screen.height/2 - height/2;
-                    $window.open('/oauth/providers/' + provider + '/login', 'PWDLogin', 'width='+width+',height='+height+',left='+x+',top='+y);
+
+                    // Open the login window with a more descriptive title
+                    var loginWindow = $window.open('/oauth/providers/' + provider + '/login', 
+                                                  'Login with ' + provider.charAt(0).toUpperCase() + provider.slice(1), 
+                                                  'width='+width+',height='+height+',left='+x+',top='+y);
+
+                    // Set a timeout to detect if the popup was blocked or closed
+                    var popupCheckInterval = setInterval(function() {
+                        if (loginWindow && loginWindow.closed) {
+                            clearInterval(popupCheckInterval);
+                            $scope.$apply(function() {
+                                $scope.isLoggingIn = false;
+                                // Only show error if not logged in (to handle case where user closed after successful login)
+                                if (!$scope.loggedIn) {
+                                    $scope.loginError = 'Login window was closed. Please try again.';
+                                    $timeout(function() {
+                                        $scope.loginError = null;
+                                    }, 5000);
+                                }
+                            });
+                        }
+                    }, 1000);
+
                     var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
                     var eventer = window[eventMethod];
                     var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+
                     // Listen to message from child window
-                    eventer(messageEvent,function(e) {
+                    eventer(messageEvent, function(e) {
                       if (e.data === 'done') {
+                        clearInterval(popupCheckInterval);
                         checkLoggedIn();
                       }
                     }, false);
@@ -150,4 +284,3 @@
     </script>
   </body>
 </html>
-

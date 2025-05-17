@@ -11,11 +11,19 @@
 
   <md-dialog-content>
     <div class="md-dialog-content" style="width:800px;">
+      <div layout="row" layout-align="space-between center">
+        <h3>Available Lessons</h3>
+        <md-button class="md-primary md-raised" ng-click="createNewLesson()">
+          <md-icon class="material-icons">add</md-icon> Create New Lesson
+        </md-button>
+      </div>
+
       <div layout="row" layout-sm="column" layout-align="space-around" ng-if="!lessons.length">
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
       </div>
+
       <md-list flex>
-        <md-list-item class="md-3-line" ng-repeat="lesson in lessons" ng-click="selectLesson(lesson)">
+        <md-list-item class="md-3-line" ng-repeat="lesson in lessons">
           <md-card md-theme="default" md-theme-watch style="width:100%">
             <md-card-title>
               <md-card-title-text>
@@ -26,7 +34,16 @@
             <md-card-content>
               <p>Steps: {{lesson.Steps.length}}</p>
               <p ng-if="lesson.EstimatedTime">Estimated time: {{lesson.EstimatedTime}}</p>
+              <p ng-if="lesson.isDraft"><em>Draft</em></p>
             </md-card-content>
+            <md-card-actions layout="row" layout-align="end center">
+              <md-button class="md-primary" ng-click="editLesson(lesson)">
+                <md-icon class="material-icons">edit</md-icon> Edit
+              </md-button>
+              <md-button class="md-primary" ng-click="selectLesson(lesson)">
+                <md-icon class="material-icons">play_arrow</md-icon> Start
+              </md-button>
+            </md-card-actions>
           </md-card>
         </md-list-item>
       </md-list>

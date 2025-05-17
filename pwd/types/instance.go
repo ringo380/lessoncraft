@@ -49,4 +49,10 @@ type InstanceConfig struct {
 	DindVolumeSize string
 	Envs           []string
 	Networks       []string
+	LessonCtx      *LessonContext
+
+	// Resource limits
+	MaxProcesses int64  // Maximum number of processes (default: 1000)
+	MaxMemoryMB  int64  // Maximum memory in MB (default: from environment)
+	StorageSize  string // Maximum storage size (default: from environment)
 }

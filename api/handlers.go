@@ -16,6 +16,6 @@ func NewApiHandler(lessonStore LessonStore) *ApiHandler {
 	}
 }
 
-func (h *ApiHandler) RegisterRoutes() {
+func (h *ApiHandler) RegisterRoutes(*mux.Router) {
 	h.lessonHandler.RegisterRoutes(h.router)
 }

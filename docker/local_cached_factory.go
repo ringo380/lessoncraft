@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
+	"github.com/ringo380/lessoncraft/internal/circuitbreaker"
 	"github.com/ringo380/lessoncraft/pwd/types"
 	"github.com/ringo380/lessoncraft/storage"
 )
@@ -18,6 +19,7 @@ type localCachedFactory struct {
 	sessionClient   DockerApi
 	instanceClients map[string]*instanceEntry
 	storage         storage.StorageApi
+	cb              *circuitbreaker.CircuitBreaker
 }
 
 type instanceEntry struct {
@@ -88,26 +90,49 @@ func (f *localCachedFactory) GetForInstance(instance *types.Instance) (DockerApi
 }
 
 func (f *localCachedFactory) check(c *client.Client) error {
-	ok := false
-	for i := 0; i < 5; i++ {
-		_, err := c.Ping(context.Background())
-		if err != nil {
-			log.Printf("Connection to [%s] has failed, maybe instance is not ready yet, sleeping and retrying in 1 second. Try #%d. Got: %v\n", c.DaemonHost(), i+1, err)
-			time.Sleep(time.Second)
-			continue
+	// Use the circuit breaker to protect against repeated failures
+	err := f.cb.Execute(func() error {
+		// Preserve the existing retry logic within the circuit breaker
+		ok := false
+		for i := 0; i < 5; i++ {
+			_, err := c.Ping(context.Background())
+			if err != nil {
+				log.Printf("Connection to [%s] has failed, maybe instance is not ready yet, sleeping and retrying in 1 second. Try #%d. Got: %v\n", c.DaemonHost(), i+1, err)
+				time.Sleep(time.Second)
+				continue
+			}
+			ok = true
+			break
 		}
-		ok = true
-		break
+		if !ok {
+			return fmt.Errorf("Connection to docker daemon was not established")
+		}
+		return nil
+	})
+
+	// If the circuit is open, return a more descriptive error
+	if err == circuitbreaker.ErrCircuitOpen {
+		return fmt.Errorf("Docker daemon circuit breaker is open, too many failures detected")
 	}
-	if !ok {
-		return fmt.Errorf("Connection to docker daemon was not established.")
-	}
-	return nil
+
+	return err
 }
 
 func NewLocalCachedFactory(s storage.StorageApi) *localCachedFactory {
+	// Create a circuit breaker for Docker daemon connections
+	cb := circuitbreaker.NewCircuitBreaker(circuitbreaker.Options{
+		Name:                     "docker-daemon",
+		FailureThreshold:         3,
+		ResetTimeout:             10 * time.Second,
+		HalfOpenSuccessThreshold: 1,
+		OnStateChange: func(name string, from, to circuitbreaker.State) {
+			log.Printf("Docker daemon circuit breaker state changed from %v to %v", from, to)
+		},
+	})
+
 	return &localCachedFactory{
 		instanceClients: make(map[string]*instanceEntry),
 		storage:         s,
+		cb:              cb,
 	}
 }

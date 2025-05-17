@@ -1,9 +1,65 @@
 package metrics
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/uber/jaeger-lib/metrics"
 )
+
+// MockFactory is a simple implementation for testing
+type MockFactory struct{}
+
+// Counter implements the metrics.Factory interface
+func (f *MockFactory) Counter(options metrics.Options) metrics.Counter {
+	return &noopCounter{}
+}
+
+// Gauge implements the metrics.Factory interface
+func (f *MockFactory) Gauge(options metrics.Options) metrics.Gauge {
+	return &noopGauge{}
+}
+
+// Timer implements the metrics.Factory interface
+func (f *MockFactory) Timer(options metrics.TimerOptions) metrics.Timer {
+	return &noopTimer{}
+}
+
+// Histogram implements the metrics.Factory interface
+func (f *MockFactory) Histogram(options metrics.HistogramOptions) metrics.Histogram {
+	return &noopHistogram{}
+}
+
+// Namespace implements the metrics.Factory interface
+func (f *MockFactory) Namespace(scope metrics.NSOptions) metrics.Factory {
+	return f
+}
+
+// noopCounter is a no-op implementation of metrics.Counter
+type noopCounter struct{}
+
+func (c *noopCounter) Inc(int64) {}
+
+// noopGauge is a no-op implementation of metrics.Gauge
+type noopGauge struct{}
+
+func (g *noopGauge) Update(int64) {}
+
+// noopTimer is a no-op implementation of metrics.Timer
+type noopTimer struct{}
+
+func (t *noopTimer) Record(time.Duration) {}
+
+// noopHistogram is a no-op implementation of metrics.Histogram
+type noopHistogram struct{}
+
+func (h *noopHistogram) Record(float64) {}
+
+// NewPrometheusFactory creates a new metrics factory for testing
+func NewPrometheusFactory(registerer prometheus.Registerer) metrics.Factory {
+	return &MockFactory{}
+}
 
 var (
 	// Request metrics

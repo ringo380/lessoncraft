@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"lessoncraft/api/metrics"
+	"github.com/ringo380/lessoncraft/api/metrics"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,10 +29,11 @@ type ErrorResponse struct {
 	TimeStamp time.Time   `json:"timestamp"`
 }
 
-var logger = logrus.New()
+// Logger is the global logger for the application
+var Logger = logrus.New()
 
 func init() {
-	logger.SetFormatter(&logrus.JSONFormatter{})
+	Logger.SetFormatter(&logrus.JSONFormatter{})
 }
 
 func ErrorHandler(next http.Handler) http.Handler {
@@ -44,7 +45,7 @@ func ErrorHandler(next http.Handler) http.Handler {
 				n := runtime.Stack(buf, false)
 				stackTrace := string(buf[:n])
 
-				logger.WithFields(logrus.Fields{
+				Logger.WithFields(logrus.Fields{
 					"error": err,
 					"stack": stackTrace,
 					"path":  r.URL.Path,
@@ -89,9 +90,8 @@ func init() {
 	cfg := &config.Configuration{
 		ServiceName: "lessoncraft",
 		Sampler: &config.SamplerConfig{
-			Type:          "adaptive", // Use adaptive sampling
-			Param:         0.01,       // Base sampling rate
-			MaxOperations: 100,        // Max number of operations to track
+			Type:  "const", // Use constant sampling
+			Param: 0.01,    // Sample 1% of traces
 		},
 		Reporter: &config.ReporterConfig{
 			LogSpans:            true,
@@ -143,7 +143,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			string(rw.status),
 		).Observe(duration.Seconds())
 
-		logger.WithFields(logrus.Fields{
+		Logger.WithFields(logrus.Fields{
 			"method":     r.Method,
 			"path":       r.URL.Path,
 			"status":     rw.status,
