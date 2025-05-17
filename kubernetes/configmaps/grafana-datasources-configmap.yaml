@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+data:
+  # Instead of embedding complex YAML, we'll use a placeholder
+  # In a real deployment, this would contain the actual datasources configuration
+  datasources.yaml: "# This is a placeholder for Grafana datasources configuration\n# In a real deployment, this would contain the actual datasources configuration in YAML format"
