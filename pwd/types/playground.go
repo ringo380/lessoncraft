@@ -106,6 +106,8 @@ type Playground struct {
 	GoogleClientSecret          string           `json:"google_client_secret" bson:"google_client_secret"`
 	DockerClientID              string           `json:"docker_client_id" bson:"docker_client_id"`
 	DockerClientSecret          string           `json:"docker_client_secret" bson:"docker_client_secret"`
+	FacebookClientID            string           `json:"facebook_client_id" bson:"facebook_client_id"`
+	FacebookClientSecret        string           `json:"facebook_client_secret" bson:"facebook_client_secret"`
 	AuthRedirectBase            string           `json:"auth_redirect_base" bson:"auth_redirect_base"`
 	DockerHost                  string           `json:"docker_host" bson:"docker_host"`
 	MaxInstances                int              `json:"max_instances" bson:"max_instances"`

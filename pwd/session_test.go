@@ -19,7 +19,7 @@ import (
 )
 
 func TestSessionNew(t *testing.T) {
-	config.PWDContainerName = "pwd"
+	config.PWDContainerName = "lessoncraft"
 
 	_d := &docker.Mock{}
 	_f := &docker.FactoryMock{}
@@ -54,7 +54,7 @@ func TestSessionNew(t *testing.T) {
 	assert.Nil(t, e)
 	assert.NotNil(t, s)
 
-	assert.Equal(t, "pwd", s.StackName)
+	assert.Equal(t, "lessoncraft", s.StackName)
 
 	assert.NotEmpty(t, s.Id)
 	assert.WithinDuration(t, s.CreatedAt, before, time.Since(before))
@@ -79,7 +79,7 @@ func TestSessionNew(t *testing.T) {
 }
 
 func TestSessionFailWhenUserIsBanned(t *testing.T) {
-	config.PWDContainerName = "pwd"
+	config.PWDContainerName = "lessoncraft"
 
 	_d := &docker.Mock{}
 	_f := &docker.FactoryMock{}

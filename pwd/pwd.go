@@ -31,7 +31,7 @@ var (
 	})
 
 	latencyHistogramVec = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "pwd_action_duration_ms",
+		Name:    "lessoncraft_action_duration_ms",
 		Help:    "How long it took to process a specific action, in a specific host",
 		Buckets: []float64{300, 1200, 5000},
 	}, []string{"action"})
@@ -48,7 +48,7 @@ func init() {
 	prometheus.MustRegister(latencyHistogramVec)
 }
 
-type pwd struct {
+type lessoncraft struct {
 	dockerFactory              docker.FactoryApi
 	event                      event.EventApi
 	storage                    storage.StorageApi
@@ -66,7 +66,9 @@ func SessionNotEmpty(e error) bool {
 	return e == sessionNotEmpty
 }
 
-type PWDApi interface {
+// LessonCraftApi defines the interface for the core LessonCraft functionality
+// This was previously named PWDApi (Play-With-Docker API)
+type LessonCraftApi interface {
 	SessionNew(ctx context.Context, config types.SessionConfig) (*types.Session, error)
 	SessionClose(session *types.Session) error
 	SessionGetSmallestViewPort(sessionId string) types.ViewPort
@@ -102,16 +104,24 @@ type PWDApi interface {
 	PlaygroundList() ([]*types.Playground, error)
 }
 
-func NewPWD(f docker.FactoryApi, e event.EventApi, s storage.StorageApi, sp provisioner.SessionProvisionerApi, ipf provisioner.InstanceProvisionerFactoryApi) *pwd {
+// NewLessonCraft creates a new instance of the LessonCraft core functionality
+// This is the preferred function to use instead of NewPWD
+func NewLessonCraft(f docker.FactoryApi, e event.EventApi, s storage.StorageApi, sp provisioner.SessionProvisionerApi, ipf provisioner.InstanceProvisionerFactoryApi) *lessoncraft {
 	//  windowsProvisioner: provisioner.NewWindowsASG(f, s), dindProvisioner: provisioner.NewDinD(f)
-	return &pwd{dockerFactory: f, event: e, storage: s, generator: id.XIDGenerator{}, sessionProvisioner: sp, instanceProvisionerFactory: ipf}
+	return &lessoncraft{dockerFactory: f, event: e, storage: s, generator: id.XIDGenerator{}, sessionProvisioner: sp, instanceProvisionerFactory: ipf}
 }
 
-func (p *pwd) getProvisioner(t string) (provisioner.InstanceProvisionerApi, error) {
+// NewPWD creates a new instance of the LessonCraft core functionality
+// Deprecated: Use NewLessonCraft instead
+func NewPWD(f docker.FactoryApi, e event.EventApi, s storage.StorageApi, sp provisioner.SessionProvisionerApi, ipf provisioner.InstanceProvisionerFactoryApi) *lessoncraft {
+	return NewLessonCraft(f, e, s, sp, ipf)
+}
+
+func (p *lessoncraft) getProvisioner(t string) (provisioner.InstanceProvisionerApi, error) {
 	return p.instanceProvisionerFactory.GetProvisioner(t)
 }
 
-func (p *pwd) setGauges() {
+func (p *lessoncraft) setGauges() {
 	s, _ := p.storage.SessionCount()
 	ses := float64(s)
 	i, _ := p.storage.InstanceCount()

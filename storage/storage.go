@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 
+	"github.com/ringo380/lessoncraft/lesson"
 	"github.com/ringo380/lessoncraft/pwd/types"
 )
 
@@ -46,4 +47,7 @@ type StorageApi interface {
 	PlaygroundPut(playground *types.Playground) error
 	PlaygroundGet(id string) (*types.Playground, error)
 	PlaygroundGetAll() ([]*types.Playground, error)
+
+	// Lesson operations
+	LessonGet(id string) (*lesson.Lesson, error)
 }

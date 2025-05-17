@@ -172,6 +172,40 @@ func LoginCallback(rw http.ResponseWriter, req *http.Request) {
 		user.Name = person.Names[0].GivenName
 		user.ProviderUserId = person.ResourceName
 
+	} else if providerName == "facebook" {
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: tok.AccessToken},
+		)
+		tc := oauth2.NewClient(ctx, ts)
+
+		// Facebook Graph API to get user info
+		resp, err := tc.Get("https://graph.facebook.com/me?fields=id,name,email,picture.type(large)")
+		if err != nil {
+			log.Printf("Could not get user from Facebook. Got: %v\n", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		fbUser := map[string]interface{}{}
+		if err := json.NewDecoder(resp.Body).Decode(&fbUser); err != nil {
+			log.Printf("Could not decode Facebook user info. Got: %v\n", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		user.ProviderUserId = fbUser["id"].(string)
+		user.Name = fbUser["name"].(string)
+		user.Email = fbUser["email"].(string)
+
+		// Get profile picture URL
+		if picture, ok := fbUser["picture"].(map[string]interface{}); ok {
+			if data, ok := picture["data"].(map[string]interface{}); ok {
+				if url, ok := data["url"].(string); ok {
+					user.Avatar = url
+				}
+			}
+		}
+
 	} else if providerName == "docker" {
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: tok.AccessToken},
@@ -226,23 +260,100 @@ func LoginCallback(rw http.ResponseWriter, req *http.Request) {
 	r, _ := playground.Extras.GetString("LoginRedirect")
 
 	fmt.Fprintf(rw, `
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
-	<script>
-	if (window.opener && !window.opener.closed) {
-	    try {
-	      window.opener.postMessage('done','*');
-	    }
-	    catch(e) {  }
-	    window.close();
-	} else {
-	    window.location = '%s';
-	}
-	</script>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>Login Successful</title>
+        <link rel="stylesheet" href="https://unpkg.com/bootstrap@4.0.0-beta/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #f8f9fa;
+            }
+            .login-success {
+                text-align: center;
+                padding: 2rem;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+                width: 100%%;
+            }
+            .success-icon {
+                font-size: 48px;
+                color: #28a745;
+                margin-bottom: 1rem;
+            }
+            .countdown {
+                font-size: 14px;
+                color: #6c757d;
+                margin-top: 1rem;
+            }
+            .provider-icon {
+                font-size: 24px;
+                margin-right: 10px;
+                vertical-align: middle;
+            }
+            .github-color { color: #24292e; }
+            .google-color { color: #4285F4; }
+            .facebook-color { color: #3b5998; }
+            .docker-color { color: #0db7ed; }
+        </style>
     </head>
     <body>
+        <div class="login-success">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h3>Login Successful!</h3>
+
+            <p class="mt-3">
+                <i class="fab 
+                    %s
+                    provider-icon"></i>
+                You've successfully logged in with <strong>%s</strong>.
+            </p>
+
+            <div class="countdown">
+                <span id="countdown">3</span> seconds until this window closes...
+            </div>
+        </div>
+
+        <script>
+            // Countdown timer
+            var seconds = 3;
+            var countdownEl = document.getElementById('countdown');
+            var interval = setInterval(function() {
+                seconds--;
+                countdownEl.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    closeOrRedirect();
+                }
+            }, 1000);
+
+            // Close window or redirect
+            function closeOrRedirect() {
+                if (window.opener && !window.opener.closed) {
+                    try {
+                        window.opener.postMessage('done','*');
+                    }
+                    catch(e) { }
+                    window.close();
+                } else {
+                    window.location = '%s';
+                }
+            }
+        </script>
     </body>
-</html>`, r)
+</html>`,
+		getProviderIconClass(providerName),
+		strings.Title(providerName),
+		r)
 }
 
 // getParentDomain returns the parent domain (if available)
@@ -260,4 +371,20 @@ func getDockerEndpoint(p *types.Playground) string {
 		return p.DockerHost
 	}
 	return "login.docker.com"
+}
+
+// getProviderIconClass returns the appropriate Font Awesome icon class for a provider
+func getProviderIconClass(provider string) string {
+	switch provider {
+	case "github":
+		return "fa-github github-color"
+	case "google":
+		return "fa-google google-color"
+	case "facebook":
+		return "fa-facebook-f facebook-color"
+	case "docker":
+		return "fa-docker docker-color"
+	default:
+		return "fa-user-circle"
+	}
 }
